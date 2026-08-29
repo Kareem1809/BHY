@@ -61,7 +61,7 @@ const WHATSAPP_URL = "https://wa.me/972548220962";
 export const STRINGS: Record<Lang, SiteStrings> = {
   he: {
     brandLatin: "Basma Haj Yahia",
-    taglineLatin: "interior & architecture design",
+    taglineLatin: "architecture & interior design",
     langToggle: "العربية",
     nav: {
       about: "אודות",
@@ -156,7 +156,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
   },
   ar: {
     brandLatin: "Basma Haj Yahia",
-    taglineLatin: "interior & architecture design",
+    taglineLatin: "architecture & interior design",
     langToggle: "עברית",
     nav: {
       about: "من نحن",

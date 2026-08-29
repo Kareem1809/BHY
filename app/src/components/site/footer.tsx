@@ -17,7 +17,7 @@ export function Footer({ t }: { t: SiteStrings }) {
         <img
           data-drift="24"
           src="/assets/logo.png"
-          alt="Basma Haj Yahia, interior & architecture design"
+          alt="Basma Haj Yahia, architecture & interior design"
           loading="lazy"
           className="w-72 max-w-full shrink-0 md:justify-self-start md:w-[30rem]"
         />
