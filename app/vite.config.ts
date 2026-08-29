@@ -19,12 +19,26 @@ const QUANTA_ICONS_SHIM = fileURLToPath(
   new URL("./src/lib/quanta-material-icons.ts", import.meta.url),
 );
 
+// `cloudflare:workers` is a workerd built-in. The temporary Vercel preview build
+// (HF_STATIC=1, or Vercel's own VERCEL env) runs outside workerd: the module does
+// not exist there and no bindings are provisioned, so point it at a stub env and
+// let the build prerender plain static HTML instead of a Worker bundle.
+const CF_WORKERS_SHIM = fileURLToPath(
+  new URL("./src/lib/cloudflare-workers-shim.ts", import.meta.url),
+);
+
 export default defineConfig(({ mode }) => {
   const designInspectorEnabled = process.env.HF_DESIGN_INSPECTOR === "1" || mode === "design";
+  const staticBuild = process.env.HF_STATIC === "1" || !!process.env.VERCEL;
 
   return {
     resolve: {
-      alias: [{ find: /^@higgsfield-ai\/icons(\/.*)?$/, replacement: QUANTA_ICONS_SHIM }],
+      alias: [
+        ...(staticBuild
+          ? [{ find: /^cloudflare:workers$/, replacement: CF_WORKERS_SHIM }]
+          : []),
+        { find: /^@higgsfield-ai\/icons(\/.*)?$/, replacement: QUANTA_ICONS_SHIM },
+      ],
     },
     // The server bundle runs as a Cloudflare Worker — there is no node_modules
     // at runtime. Vite's default SSR build leaves npm deps as bare external
@@ -34,19 +48,20 @@ export default defineConfig(({ mode }) => {
     // Dev-only: keep the workerd built-in out of the dependency scanner, which
     // otherwise aborts pre-bundling (react's CJS entry then crashes SSR dev).
     optimizeDeps: {
-      exclude: ["cloudflare:workers"],
+      exclude: staticBuild ? [] : ["cloudflare:workers"],
     },
     ssr: {
       noExternal: true,
       // `cloudflare:workers` is a workerd runtime built-in that exposes the Worker
       // env / bindings (D1 `DB`, R2 `STORAGE`). Like node: builtins it must NOT be
       // bundled; the runtime provides it. (`ssr.external` is typed string[].)
-      external: ["cloudflare:workers"],
+      external: staticBuild ? [] : ["cloudflare:workers"],
     },
     build: {
       // Keep `cloudflare:*` external in the SSR rollup pass too — `noExternal`
-      // above would otherwise try to resolve+bundle it and fail.
-      rollupOptions: { external: [/^cloudflare:/] },
+      // above would otherwise try to resolve+bundle it and fail. On a static
+      // build the alias above has already replaced it, so nothing stays external.
+      rollupOptions: staticBuild ? {} : { external: [/^cloudflare:/] },
     },
     plugins: [
       // Material Symbols SVGs (the app icon set) import as React components via
@@ -78,6 +93,12 @@ export default defineConfig(({ mode }) => {
       // inside effects/handlers, or guarded with `typeof window !== "undefined"`.
       tanstackStart({
         server: { entry: "server" },
+        // Static build: render the routes to HTML at build time so the output is
+        // a plain static site (dist/client) any host can serve. The contact
+        // server function has no D1 off Cloudflare, so nothing dynamic is lost.
+        ...(staticBuild
+          ? { prerender: { enabled: true, crawlLinks: true }, pages: [{ path: "/" }] }
+          : {}),
       }),
       higgsfieldDesignInspectorVitePlugin(designInspectorEnabled),
       react({
