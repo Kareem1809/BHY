@@ -1,28 +1,59 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+
+import { About } from "../components/site/about";
+import { Contact } from "../components/site/contact";
+import { Footer } from "../components/site/footer";
+import { Hero } from "../components/site/hero";
+import { Journal } from "../components/site/journal";
+import { SiteNav } from "../components/site/nav";
+import { Portfolio } from "../components/site/portfolio";
+import { Services } from "../components/site/services";
+import { STRINGS, type Lang } from "../lib/i18n";
+import { useSiteMotion } from "../lib/motion";
 
 export const Route = createFileRoute("/")({
-  // No title/description here on purpose: the home page inherits the app's
-  // editable page metadata from the root route (set via the marketplace meta
-  // API — title/favicon/og), so a shared link to "/" shows the owner's values.
-  // Add a `head` here only to give a SPECIFIC page its own title/description
-  // (a deeper route's head overrides the root's for that page).
   component: Index,
 });
 
-// Replace this placeholder. Routes are server-rendered — keep render SSR-safe
-// (no window/document at module top level or during render). See ./README.md.
 function Index() {
+  const [lang, setLang] = useState<Lang>("he");
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("bhy-lang");
+      if (saved === "ar" || saved === "he") setLang(saved);
+    } catch {
+      // storage unavailable (private mode): keep the Hebrew default
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = "rtl";
+    try {
+      window.localStorage.setItem("bhy-lang", lang);
+    } catch {
+      // storage unavailable: the toggle still works for this visit
+    }
+  }, [lang]);
+
+  useSiteMotion([lang]);
+
+  const t = STRINGS[lang];
+
   return (
-    <div
-      data-higgsfield-blank-page-placeholder="REMOVE_THIS"
-      className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center"
-    >
-      <h1 className="text-2xl font-semibold tracking-tight">
-        Your website will live here.
-      </h1>
-      <p className="text-base text-gray-500">
-        Ask Higgsfield Supercomputer to build it.
-      </p>
+    <div className="bhy-site" lang={lang}>
+      <SiteNav t={t} lang={lang} onToggleLang={() => setLang((l) => (l === "he" ? "ar" : "he"))} />
+      <main>
+        <Hero t={t} />
+        <About t={t} />
+        <Portfolio t={t} />
+        <Services t={t} />
+        <Journal t={t} />
+        <Contact t={t} lang={lang} />
+      </main>
+      <Footer t={t} />
     </div>
   );
 }

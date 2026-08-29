@@ -31,6 +31,11 @@ export default defineConfig(({ mode }) => {
     // imports (h3, react, @tanstack/*, seroval, …), which resolve on a Node
     // server but throw "No such module" in a Worker. Bundle them all in.
     // (node: builtins stay external — nodejs_compat provides them.)
+    // Dev-only: keep the workerd built-in out of the dependency scanner, which
+    // otherwise aborts pre-bundling (react's CJS entry then crashes SSR dev).
+    optimizeDeps: {
+      exclude: ["cloudflare:workers"],
+    },
     ssr: {
       noExternal: true,
       // `cloudflare:workers` is a workerd runtime built-in that exposes the Worker
