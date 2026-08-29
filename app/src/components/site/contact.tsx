@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 
-import { submitContact } from "../../lib/api/contact.functions";
+import { sendContactMessage } from "../../lib/api/contact.email";
 import type { Lang, SiteStrings } from "../../lib/i18n";
 import { Arrow } from "./arrow";
 import { Words } from "./words";
@@ -24,6 +24,7 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
       phone: String(data.get("phone") ?? "").trim(),
       email: String(data.get("email") ?? "").trim(),
       message: String(data.get("message") ?? "").trim(),
+      honey: String(data.get("_honey") ?? ""),
     };
 
     const nextErrors: Errors = {};
@@ -37,7 +38,7 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
 
     setStatus("sending");
     try {
-      const result = await submitContact({ data: { ...values, lang } });
+      const result = await sendContactMessage({ ...values, lang });
       if (result.ok) {
         setStatus("success");
         form.reset();
@@ -66,6 +67,15 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
         </div>
         <form data-drift="48" className="md:col-span-7" onSubmit={onSubmit} noValidate>
           <div className="flex flex-col gap-9">
+            {/* Spam trap: invisible to people, irresistible to form-filling bots. */}
+            <input
+              type="text"
+              name="_honey"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="hidden"
+            />
             <div className="bhy-field">
               <label className="bhy-label" htmlFor="contact-name">
                 {t.contact.name}
