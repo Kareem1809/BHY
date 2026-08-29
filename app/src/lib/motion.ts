@@ -40,7 +40,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
         const lenis = new Lenis({
           autoRaf: false,
           lerp: 0.09,
-          anchors: { offset: -88 },
+          anchors: { offset: -152 },
         });
         lenis.on("scroll", ScrollTrigger.update);
         const tick = (time: number) => lenis.raf(time * 1000);

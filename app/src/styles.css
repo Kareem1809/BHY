@@ -196,6 +196,53 @@ html {
   white-space: nowrap;
 }
 
+/* The full logo lockup (mark + script name + tagline) fills the whole height of
+   the navbar — the bar IS the logo's frame, in both the tall hero state and the
+   short scrolled one. The bar steps down at each breakpoint so the ~1.9:1
+   lockup can never crowd the menu links, and the logo follows it automatically.
+   The lift + shadow stay in both states: the bar is dark either way. */
+.bhy-nav-bar {
+  height: 21rem;
+  transition: height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bhy-nav-solid .bhy-nav-bar {
+  height: 10rem;
+}
+.bhy-logo-link {
+  display: block;
+  flex: none;
+  align-self: stretch;
+}
+.bhy-logo {
+  height: 100%;
+  width: auto;
+  filter: brightness(1.22) contrast(1.04) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.5));
+}
+@media (max-width: 1279px) {
+  .bhy-nav-bar {
+    height: 15rem;
+  }
+  .bhy-nav-solid .bhy-nav-bar {
+    height: 8.5rem;
+  }
+}
+@media (max-width: 1023px) {
+  .bhy-nav-bar {
+    height: 8rem;
+  }
+  .bhy-nav-solid .bhy-nav-bar {
+    height: 6rem;
+  }
+}
+@media (max-width: 767px) {
+  .bhy-nav-bar {
+    height: 7rem;
+  }
+  .bhy-nav-solid .bhy-nav-bar {
+    height: 5.5rem;
+  }
+}
+
 /* nav */
 .bhy-nav {
   position: fixed;
@@ -224,10 +271,12 @@ html {
   }
 }
 .bhy-nav-solid {
-  background: rgba(245, 239, 230, 0.92);
-  color: var(--bhy-ink);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 1px 0 rgba(62, 46, 35, 0.12);
+  /* Carries the hero's dark tone down the page instead of flipping to ivory, so
+     the bar looks the same scrolled as it does on the opening screen. Opaque on
+     purpose — a translucent bar picked up each section and showed a seam. */
+  background: var(--bhy-ink);
+  color: var(--bhy-paper);
+  box-shadow: 0 1px 0 rgba(245, 239, 230, 0.14);
 }
 .bhy-nav-link {
   position: relative;

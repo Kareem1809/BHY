@@ -13,10 +13,10 @@ export function Footer({ t }: { t: SiteStrings }) {
       <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 py-16 md:grid-cols-12 md:py-20">
         <div data-drift="24" className="md:col-span-5">
           <img
-            src="/assets/logo.jpg"
+            src="/assets/logo.png"
             alt="Basma Haj Yahia, interior & architecture design"
             loading="lazy"
-            className="w-64 max-w-full mix-blend-multiply"
+            className="w-64 max-w-full"
           />
         </div>
         <div data-drift="48" className="md:col-span-3">
