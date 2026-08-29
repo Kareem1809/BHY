@@ -197,16 +197,19 @@ html {
 }
 
 /* The full logo lockup (mark + script name + tagline) fills the whole height of
-   the navbar — the bar IS the logo's frame, in both the tall hero state and the
-   short scrolled one. The bar steps down at each breakpoint so the ~1.9:1
-   lockup can never crowd the menu links, and the logo follows it automatically.
-   The lift + shadow stay in both states: the bar is dark either way. */
+   the navbar — the bar IS the logo's frame, in both the hero state and the
+   scrolled one. The size is tied to the viewport, not to fixed rem steps: at a
+   fixed height the lockup stayed the same pixels on a small or scaled-up
+   display (Windows at 125%) and there took over the screen and crowded the hero
+   headline. Capping on BOTH axes keeps it proportional — vw so it never
+   dominates a narrow window, vh so a short one keeps room for the hero. The
+   lift + shadow stay in both states: the bar is dark either way. */
 .bhy-nav-bar {
-  height: 21rem;
+  height: clamp(4.5rem, min(13vw, 22vh), 17rem);
   transition: height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .bhy-nav-solid .bhy-nav-bar {
-  height: 10rem;
+  height: clamp(3.5rem, min(7vw, 14vh), 9rem);
 }
 .bhy-logo-link {
   display: block;
@@ -217,30 +220,6 @@ html {
   height: 100%;
   width: auto;
   filter: brightness(1.22) contrast(1.04) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.5));
-}
-@media (max-width: 1279px) {
-  .bhy-nav-bar {
-    height: 15rem;
-  }
-  .bhy-nav-solid .bhy-nav-bar {
-    height: 8.5rem;
-  }
-}
-@media (max-width: 1023px) {
-  .bhy-nav-bar {
-    height: 8rem;
-  }
-  .bhy-nav-solid .bhy-nav-bar {
-    height: 6rem;
-  }
-}
-@media (max-width: 767px) {
-  .bhy-nav-bar {
-    height: 7rem;
-  }
-  .bhy-nav-solid .bhy-nav-bar {
-    height: 5.5rem;
-  }
 }
 
 /* nav */

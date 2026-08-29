@@ -25,8 +25,8 @@ export function SiteNav({ t, lang, onToggleLang }: NavProps) {
           <img
             src="/assets/logo.png"
             alt={t.brandLatin}
-            width={1393}
-            height={734}
+            width={1800}
+            height={1001}
             className="bhy-logo"
           />
         </a>
