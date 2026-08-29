@@ -12,12 +12,14 @@ export function Footer({ t }: { t: SiteStrings }) {
     <footer className="bg-[#EFE4D4]">
       <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 py-16 md:grid-cols-12 md:py-20">
         <div data-drift="24" className="md:col-span-5">
-          <img
-            src="/assets/logo.png"
-            alt="Basma Haj Yahia, interior & architecture design"
-            loading="lazy"
-            className="w-64 max-w-full"
-          />
+          <div className="inline-block max-w-full rounded-sm border border-[#B67B62]/35 bg-[#FBF7F0] p-6 shadow-[0_1px_0_rgba(62,46,35,0.06)] md:p-8">
+            <img
+              src="/assets/logo.png"
+              alt="Basma Haj Yahia, interior & architecture design"
+              loading="lazy"
+              className="w-72 max-w-full md:w-[26rem]"
+            />
+          </div>
         </div>
         <div data-drift="48" className="md:col-span-3">
           <p className="bhy-label">{t.footer.menu}</p>
@@ -36,12 +38,16 @@ export function Footer({ t }: { t: SiteStrings }) {
           <ul className="mt-5 flex flex-col gap-3">
             {t.footer.socials.map(({ label, href }) => {
               const external = href.startsWith("http");
+              // The email entry shows the address itself, which is Latin and has
+              // to stay LTR inside this RTL column.
+              const isMail = href.startsWith("mailto:");
               return (
                 <li key={href}>
                   <a
                     href={href}
                     className="bhy-nav-link text-[#3E2E23]"
                     {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                    {...(isMail ? { dir: "ltr" as const } : {})}
                   >
                     {label}
                   </a>

@@ -145,7 +145,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       follow: "עקבו אחרינו",
       socials: [
         { label: "אינסטגרם", href: INSTAGRAM_URL },
-        { label: "אימייל", href: `mailto:${EMAIL_ADDRESS}` },
+        { label: EMAIL_ADDRESS, href: `mailto:${EMAIL_ADDRESS}` },
       ],
       rights: "© 2026 בסמה חאג' יחיא. כל הזכויות שמורות.",
     },
@@ -238,7 +238,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       follow: "تابعونا",
       socials: [
         { label: "إنستغرام", href: INSTAGRAM_URL },
-        { label: "البريد الإلكتروني", href: `mailto:${EMAIL_ADDRESS}` },
+        { label: EMAIL_ADDRESS, href: `mailto:${EMAIL_ADDRESS}` },
       ],
       rights: "© 2026 بسمة حاج يحيى. جميع الحقوق محفوظة.",
     },
