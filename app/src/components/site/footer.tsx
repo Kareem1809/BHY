@@ -10,18 +10,19 @@ export function Footer({ t }: { t: SiteStrings }) {
 
   return (
     <footer className="bg-[#EFE4D4]">
-      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 py-16 md:grid-cols-12 md:py-20">
-        <div data-drift="24" className="md:col-span-5">
-          <div className="inline-block max-w-full rounded-sm border border-[#B67B62]/35 bg-[#FBF7F0] p-6 shadow-[0_1px_0_rgba(62,46,35,0.06)] md:p-8">
-            <img
-              src="/assets/logo.png"
-              alt="Basma Haj Yahia, interior & architecture design"
-              loading="lazy"
-              className="w-72 max-w-full md:w-[26rem]"
-            />
-          </div>
-        </div>
-        <div data-drift="48" className="md:col-span-3">
+      {/* Full-bleed like the navbar lockup: the logo answers the screen edge at
+          the same inset, rather than stopping at the 1280px text column. No
+          plate around it either — it sits straight on the band. */}
+      <div data-drift="24" className="flex justify-start px-5 pt-16 md:px-8 md:pt-20">
+        <img
+          src="/assets/logo.png"
+          alt="Basma Haj Yahia, interior & architecture design"
+          loading="lazy"
+          className="w-72 max-w-full md:w-[30rem]"
+        />
+      </div>
+      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 pt-12 pb-16 md:grid-cols-12 md:pb-20">
+        <div data-drift="48" className="md:col-span-3 md:col-start-6">
           <p className="bhy-label">{t.footer.menu}</p>
           <ul className="mt-5 flex flex-col gap-3">
             {links.map(([href, label]) => (
