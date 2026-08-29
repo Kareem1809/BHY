@@ -41,8 +41,19 @@ export type SiteStrings = {
     required: string;
     invalidEmail: string;
   };
-  footer: { menu: string; follow: string; socials: [string, string, string]; rights: string };
+  footer: {
+    menu: string;
+    follow: string;
+    socials: { label: string; href: string }[];
+    rights: string;
+  };
 };
+
+// One definition per destination — the language blocks below only carry labels,
+// so a URL can never drift between Hebrew and Arabic. WhatsApp joins this list
+// once the number is confirmed.
+const INSTAGRAM_URL = "https://www.instagram.com/basma.hajyahia.design";
+const EMAIL_ADDRESS = "basmahaj99@gmail.com";
 
 export const STRINGS: Record<Lang, SiteStrings> = {
   he: {
@@ -132,7 +143,10 @@ export const STRINGS: Record<Lang, SiteStrings> = {
     footer: {
       menu: "תפריט",
       follow: "עקבו אחרינו",
-      socials: ["אינסטגרם", "פייסבוק", "פינטרסט"],
+      socials: [
+        { label: "אינסטגרם", href: INSTAGRAM_URL },
+        { label: "אימייל", href: `mailto:${EMAIL_ADDRESS}` },
+      ],
       rights: "© 2026 בסמה חאג' יחיא. כל הזכויות שמורות.",
     },
   },
@@ -222,7 +236,10 @@ export const STRINGS: Record<Lang, SiteStrings> = {
     footer: {
       menu: "القائمة",
       follow: "تابعونا",
-      socials: ["إنستغرام", "فيسبوك", "بينترست"],
+      socials: [
+        { label: "إنستغرام", href: INSTAGRAM_URL },
+        { label: "البريد الإلكتروني", href: `mailto:${EMAIL_ADDRESS}` },
+      ],
       rights: "© 2026 بسمة حاج يحيى. جميع الحقوق محفوظة.",
     },
   },

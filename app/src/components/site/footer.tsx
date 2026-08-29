@@ -34,13 +34,20 @@ export function Footer({ t }: { t: SiteStrings }) {
         <div data-drift="72" className="md:col-span-4">
           <p className="bhy-label">{t.footer.follow}</p>
           <ul className="mt-5 flex flex-col gap-3">
-            {t.footer.socials.map((name) => (
-              <li key={name}>
-                <a href="#top" className="bhy-nav-link text-[#3E2E23]">
-                  {name}
-                </a>
-              </li>
-            ))}
+            {t.footer.socials.map(({ label, href }) => {
+              const external = href.startsWith("http");
+              return (
+                <li key={href}>
+                  <a
+                    href={href}
+                    className="bhy-nav-link text-[#3E2E23]"
+                    {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                  >
+                    {label}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
