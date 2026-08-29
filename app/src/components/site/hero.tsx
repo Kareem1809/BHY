@@ -31,8 +31,10 @@ export function Hero({ t }: { t: SiteStrings }) {
           </span>
         </h1>
         <div className="mt-10 flex flex-col items-start gap-9 md:ms-[46%]">
-          <p className="max-w-[34ch] text-base leading-relaxed text-[#F5EFE6]/85">{t.hero.body}</p>
-          <a href="#contact" className="bhy-cta-underline text-[#F5EFE6]">
+          <p className="bhy-hero-fade max-w-[34ch] text-base leading-relaxed text-[#F5EFE6]/85">
+            {t.hero.body}
+          </p>
+          <a href="#contact" className="bhy-hero-fade bhy-hero-fade-2 bhy-cta-underline text-[#F5EFE6]">
             <span>{t.hero.cta}</span>
             <Arrow className="bhy-cta-underline-arrow w-6" />
           </a>

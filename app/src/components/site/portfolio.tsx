@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import type { SiteStrings } from "../../lib/i18n";
 import { Arrow } from "./arrow";
+import { Words } from "./words";
 
 const SLIDE_IMAGES = [
   { main: "/assets/project-1.jpg", swatch: "/assets/project-1-detail.jpg" },
@@ -22,16 +23,18 @@ export function Portfolio({ t }: { t: SiteStrings }) {
     <section id="portfolio" className="bg-[#F5EFE6] py-28 md:py-36">
       <div className="mx-auto w-full max-w-[1280px] px-6">
         <div className="text-center">
-          <p className="bhy-eyebrow">{t.portfolio.eyebrow}</p>
-          <h2 data-drift="32" className="bhy-display-2 mt-4 text-[#3E2E23]">
-            {t.portfolio.title}
+          <p data-drift="24" className="bhy-eyebrow">
+            {t.portfolio.eyebrow}
+          </p>
+          <h2 data-words className="bhy-display-2 mt-4 text-[#3E2E23]">
+            <Words text={t.portfolio.title} />
           </h2>
         </div>
         <div
           key={index}
           className="bhy-slide mt-16 grid grid-cols-1 gap-12 md:mt-24 md:grid-cols-12"
         >
-          <figure className="bhy-slide-img overflow-hidden md:col-span-6">
+          <figure className="bhy-slide-img bhy-fig overflow-hidden md:col-span-6">
             <img
               src={images.main}
               alt={slide.title}
@@ -56,7 +59,7 @@ export function Portfolio({ t }: { t: SiteStrings }) {
                 </p>
               </div>
               <figure className="lg:col-span-5">
-                <div className="bhy-slide-swatch overflow-hidden">
+                <div className="bhy-slide-swatch bhy-fig overflow-hidden">
                   <img
                     src={images.swatch}
                     alt=""

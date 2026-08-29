@@ -44,6 +44,7 @@ function Index() {
 
   return (
     <div className="bhy-site" lang={lang}>
+      <div className="bhy-progress" data-progress aria-hidden="true" />
       <SiteNav t={t} lang={lang} onToggleLang={() => setLang((l) => (l === "he" ? "ar" : "he"))} />
       <main>
         <Hero t={t} />

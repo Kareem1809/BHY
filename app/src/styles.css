@@ -203,10 +203,25 @@ html {
   inset-inline: 0;
   z-index: 50;
   color: #f5efe6;
+  animation: bhy-nav-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards;
   transition:
     background-color 0.35s ease,
     color 0.35s ease,
-    box-shadow 0.35s ease;
+    box-shadow 0.35s ease,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bhy-nav-hidden {
+  transform: translateY(-100%);
+}
+@keyframes bhy-nav-in {
+  from {
+    transform: translateY(-14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 .bhy-nav-solid {
   background: rgba(245, 239, 230, 0.92);
@@ -440,9 +455,12 @@ html {
 .bhy-service-card {
   background: var(--bhy-panel);
   padding: 1.25rem 1.25rem 2rem;
-  transition: box-shadow 0.35s ease;
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s ease;
 }
 .bhy-service-card:hover {
+  transform: translateY(-6px);
   box-shadow: 0 24px 48px -28px rgba(20, 12, 6, 0.55);
 }
 .bhy-service-card .bhy-display-4 {
@@ -514,6 +532,92 @@ html {
   cursor: default;
 }
 
+/* page-wide choreography */
+.bhy-w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.09em;
+  margin-inline-end: 0.28em;
+}
+.bhy-w:last-child {
+  margin-inline-end: 0;
+}
+.bhy-w-inner {
+  display: inline-block;
+  will-change: transform;
+}
+
+.bhy-progress {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  height: 2px;
+  z-index: 60;
+  background: var(--bhy-rose);
+  transform: scaleX(0);
+  transform-origin: right center;
+  pointer-events: none;
+}
+
+.bhy-hero-fade {
+  animation: bhy-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.7s backwards;
+}
+.bhy-hero-fade-2 {
+  animation-delay: 0.85s;
+}
+@keyframes bhy-fade-up {
+  from {
+    transform: translateY(22px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* carousel content staggers in behind the image on every slide change */
+.bhy-slide .bhy-display-3 {
+  animation: bhy-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.06s backwards;
+}
+.bhy-slide p {
+  animation: bhy-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards;
+}
+.bhy-slide .bhy-slide-swatch {
+  animation: bhy-fade-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.16s backwards;
+}
+.bhy-slide figcaption {
+  animation: bhy-fade-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
+}
+
+/* image hover glaze */
+.bhy-fig {
+  position: relative;
+}
+.bhy-fig img {
+  transition: filter 0.5s ease;
+}
+.bhy-fig:hover img {
+  filter: brightness(1.05) saturate(1.04);
+}
+.bhy-fig::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(200deg, rgba(182, 123, 98, 0.18), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.bhy-fig:hover::after {
+  opacity: 1;
+}
+
+.bhy-field:focus-within .bhy-label {
+  color: var(--bhy-rose);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bhy-site *,
   .bhy-site *::before,
@@ -521,5 +625,8 @@ html {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .bhy-progress {
+    display: none;
   }
 }

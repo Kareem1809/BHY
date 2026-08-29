@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { submitContact } from "../../lib/api/contact.functions";
 import type { Lang, SiteStrings } from "../../lib/i18n";
 import { Arrow } from "./arrow";
+import { Words } from "./words";
 
 type Status = "idle" | "sending" | "success" | "error";
 type Field = "name" | "phone" | "email" | "message";
@@ -53,15 +54,17 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
     <section id="contact" className="bg-[#FBF7F0] py-28 md:py-36">
       <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-16 px-6 md:grid-cols-12">
         <div className="md:col-span-5">
-          <p className="bhy-eyebrow">{t.contact.eyebrow}</p>
-          <h2 data-drift="40" className="bhy-display-2 mt-6 text-[#3E2E23]">
-            {t.contact.title}
+          <p data-drift="24" className="bhy-eyebrow">
+            {t.contact.eyebrow}
+          </p>
+          <h2 data-words className="bhy-display-2 mt-6 text-[#3E2E23]">
+            <Words text={t.contact.title} />
           </h2>
-          <p className="mt-8 max-w-[40ch] text-base leading-relaxed text-[#6B5748]">
+          <p data-drift="36" className="mt-8 max-w-[40ch] text-base leading-relaxed text-[#6B5748]">
             {t.contact.body}
           </p>
         </div>
-        <form className="md:col-span-7" onSubmit={onSubmit} noValidate>
+        <form data-drift="48" className="md:col-span-7" onSubmit={onSubmit} noValidate>
           <div className="flex flex-col gap-9">
             <div className="bhy-field">
               <label className="bhy-label" htmlFor="contact-name">

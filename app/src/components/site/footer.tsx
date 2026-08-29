@@ -11,7 +11,7 @@ export function Footer({ t }: { t: SiteStrings }) {
   return (
     <footer className="bg-[#EFE4D4]">
       <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 py-16 md:grid-cols-12 md:py-20">
-        <div className="md:col-span-5">
+        <div data-drift="24" className="md:col-span-5">
           <img
             src="/assets/logo.jpg"
             alt="Basma Haj Yahia, interior & architecture design"
@@ -19,7 +19,7 @@ export function Footer({ t }: { t: SiteStrings }) {
             className="w-64 max-w-full mix-blend-multiply"
           />
         </div>
-        <div className="md:col-span-3">
+        <div data-drift="48" className="md:col-span-3">
           <p className="bhy-label">{t.footer.menu}</p>
           <ul className="mt-5 flex flex-col gap-3">
             {links.map(([href, label]) => (
@@ -31,7 +31,7 @@ export function Footer({ t }: { t: SiteStrings }) {
             ))}
           </ul>
         </div>
-        <div className="md:col-span-4">
+        <div data-drift="72" className="md:col-span-4">
           <p className="bhy-label">{t.footer.follow}</p>
           <ul className="mt-5 flex flex-col gap-3">
             {t.footer.socials.map((name) => (
