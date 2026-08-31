@@ -8,22 +8,27 @@ export function Hero({ t }: { t: SiteStrings }) {
       id="top"
       className="relative flex min-h-dvh flex-col justify-end overflow-hidden bg-[#2A1E16]"
     >
-      {/* The film never plays on its own — scroll drives it frame by frame
-          (motion.ts pins the section and maps scroll progress to currentTime).
-          No src here: motion.ts picks 4K or FHD per screen, so reduced-motion
-          and no-JS visitors get only the 4K poster, not a silent download. */}
-      <video
-        data-hero-film
-        data-src-uhd="/assets/hero-film-4k.mp4"
-        data-src-fhd="/assets/hero-film-fhd.mp4"
-        poster="/assets/hero-poster.jpg"
-        muted
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        aria-hidden="true"
-        className="bhy-hero-img absolute inset-0 h-full w-full object-cover"
-      />
+      {/* The film never plays on its own — scroll is the playhead. It ships as
+          a still-frame sequence drawn onto the canvas (motion.ts pins the
+          section and maps scroll progress to a frame index): every frame is a
+          ready image, so scrubbing never waits on video decode. The poster is
+          frame 0 from the same pipeline — reduced-motion and no-JS visitors
+          keep it, everyone else sees the canvas take over seamlessly. */}
+      <div aria-hidden="true" className="bhy-hero-img absolute inset-0">
+        <img
+          src="/assets/hero-poster.jpg"
+          alt=""
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <canvas
+          data-hero-canvas
+          data-seq-uhd="/assets/hero-seq/uhd"
+          data-seq-fhd="/assets/hero-seq/fhd"
+          data-frames="121"
+          className="absolute inset-0 h-full w-full"
+        />
+      </div>
       <div
         data-hero-veil
         aria-hidden="true"

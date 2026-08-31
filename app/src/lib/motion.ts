@@ -54,36 +54,91 @@ export function useSiteMotion(deps: readonly unknown[]) {
           (window as unknown as Record<string, unknown>).__bhyMotion = { gsap, ScrollTrigger, lenis };
         }
 
+        let filmCleanup: Cleanup = () => {};
+
         const ctx = gsap.context(() => {
           const hero = document.querySelector("[data-hero]");
 
           // Scroll-driven film: the hero pins for ~2.5 screens and scroll
           // progress becomes the playhead — the film never runs on its own,
-          // scrolling down advances it, scrolling up rewinds it. scrub: 0.6
-          // keeps the playhead easing gently behind the scrollbar (the same
-          // lagged feel as the rest of the site) instead of snapping.
-          const film = document.querySelector<HTMLVideoElement>("[data-hero-film]");
-          if (hero && film) {
-            // 4K only where the glass can show it (retina laptop and up);
-            // phones get the FHD cut and save ~22MB. (Attribute is src-uhd,
-            // not src-4k: a digit after the hyphen never camelCases into
-            // dataset, so dataset.src4k would read undefined.)
-            const density = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
-            film.src = (density >= 2000 ? film.dataset.srcUhd : film.dataset.srcFhd) ?? "";
-            film.load();
+          // scrolling down advances it, scrolling up rewinds it. The film is a
+          // WebP still sequence painted onto a canvas: video-element scrubbing
+          // stuttered (every currentTime write pays a 4K decode), while
+          // drawImage of a ready frame is near-free, so this stays smooth.
+          const filmCanvas = document.querySelector<HTMLCanvasElement>("[data-hero-canvas]");
+          const paint2d = filmCanvas?.getContext("2d");
+          if (hero && filmCanvas && paint2d) {
+            // Retina laptops and up read the 2880px frames; phones take the
+            // 1440px cut and a quarter of the bytes.
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const density = window.innerWidth * dpr;
+            const seqBase = density >= 2000 ? filmCanvas.dataset.seqUhd : filmCanvas.dataset.seqFhd;
+            const FRAMES = Number(filmCanvas.dataset.frames) || 121;
+            const frameUrl = (i: number) => `${seqBase}/${String(i).padStart(3, "0")}.webp`;
 
-            let filmLength = 0;
-            film.addEventListener(
-              "loadedmetadata",
-              () => {
-                filmLength = film.duration;
-                // A muted inline play/pause forces the decoder awake so the
-                // first scrub already has frames (iOS won't decode otherwise).
-                film.play().then(() => film.pause()).catch(() => {});
-                ScrollTrigger.refresh();
-              },
-              { once: true },
-            );
+            const frames: (HTMLImageElement | undefined)[] = new Array(FRAMES);
+            const ready = new Uint8Array(FRAMES);
+            let shownFrame = -1;
+            let targetFrame = 0;
+
+            const sizeCanvas = () => {
+              filmCanvas.width = Math.round(filmCanvas.clientWidth * dpr);
+              filmCanvas.height = Math.round(filmCanvas.clientHeight * dpr);
+              shownFrame = -1; // force a repaint at the new size
+              paintNearest();
+            };
+
+            // cover-crop, same fit the old <video object-cover> had
+            const paintFrame = (i: number) => {
+              const img = frames[i];
+              if (!img || !ready[i]) return;
+              const cw = filmCanvas.width;
+              const ch = filmCanvas.height;
+              const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+              const dw = img.naturalWidth * scale;
+              const dh = img.naturalHeight * scale;
+              paint2d.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+              shownFrame = i;
+            };
+
+            // While the sequence streams in, show the closest frame that has
+            // arrived — the film starts coarse and sharpens into place.
+            const paintNearest = () => {
+              for (let d = 0; d < FRAMES; d++) {
+                const lo = targetFrame - d;
+                const hi = targetFrame + d;
+                if (lo >= 0 && ready[lo]) return paintFrame(lo);
+                if (hi < FRAMES && ready[hi]) return paintFrame(hi);
+              }
+            };
+
+            const loadFrame = (i: number) => {
+              if (frames[i]) return;
+              const img = new Image();
+              img.decoding = "async";
+              img.onload = () => {
+                ready[i] = 1;
+                // pre-decode off the main thread so first paint doesn't jank
+                img.decode?.().catch(() => {});
+                if (shownFrame !== targetFrame) paintNearest();
+              };
+              img.src = frameUrl(i);
+              frames[i] = img;
+            };
+
+            // Two-wave load: every 6th frame first so scrubbing works within
+            // the first second, then the gaps fill in and it turns buttery.
+            for (let i = 0; i < FRAMES; i += 6) loadFrame(i);
+            const fillTimer = window.setTimeout(() => {
+              for (let i = 0; i < FRAMES; i++) loadFrame(i);
+            }, 900);
+
+            sizeCanvas();
+            window.addEventListener("resize", sizeCanvas);
+            filmCleanup = () => {
+              window.clearTimeout(fillTimer);
+              window.removeEventListener("resize", sizeCanvas);
+            };
 
             const playhead = { p: 0 };
             gsap
@@ -107,9 +162,8 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   ease: "none",
                   duration: 1,
                   onUpdate: () => {
-                    if (!filmLength) return;
-                    // stop one frame short: seeking to the exact end flashes black
-                    film.currentTime = Math.min(playhead.p * filmLength, filmLength - 1 / 24);
+                    targetFrame = Math.round(playhead.p * (FRAMES - 1));
+                    if (targetFrame !== shownFrame) paintNearest();
                   },
                 },
                 0,
@@ -117,8 +171,9 @@ export function useSiteMotion(deps: readonly unknown[]) {
               // The headline said its piece — it bows out over the first
               // quarter so the film takes the room (exit fade, not a reveal).
               .to("[data-hero-copy]", { opacity: 0, y: -64, ease: "none", duration: 0.25 }, 0)
-              // ...and the legibility veil thins out with it.
-              .to("[data-hero-veil]", { opacity: 0.4, ease: "none", duration: 0.3 }, 0);
+              // ...and the legibility veil thins right out so the film reads
+              // clean and bright once the text is gone.
+              .to("[data-hero-veil]", { opacity: 0.3, ease: "none", duration: 0.3 }, 0);
           }
 
           if (nav && hero) {
@@ -233,6 +288,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
         document.fonts?.ready.then(() => ScrollTrigger.refresh()).catch(() => {});
 
         cleanup = () => {
+          filmCleanup();
           ctx.revert();
           gsap.ticker.remove(tick);
           lenis.destroy();
