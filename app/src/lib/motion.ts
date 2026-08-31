@@ -128,11 +128,23 @@ export function useSiteMotion(deps: readonly unknown[]) {
               gsap.ticker.remove(chase);
             };
             startChase();
+            const filmStage = document.querySelector<HTMLElement>("[data-hero-stage]");
             ScrollTrigger.create({
               trigger: hero,
               start: "top bottom",
               end: "bottom top",
-              onToggle: (self) => (self.isActive ? startChase() : stopChase()),
+              onToggle: (self) => {
+                if (self.isActive) {
+                  startChase();
+                  if (filmStage) filmStage.style.visibility = "";
+                } else {
+                  stopChase();
+                  // takes the video out of the paint path entirely once the
+                  // reader is past it, instead of leaving a live decoder
+                  // sitting above every section below
+                  if (filmStage) filmStage.style.visibility = "hidden";
+                }
+              },
             });
 
             filmCleanup = () => {
