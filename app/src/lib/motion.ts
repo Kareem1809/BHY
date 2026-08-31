@@ -119,6 +119,30 @@ export function useSiteMotion(deps: readonly unknown[]) {
               if (blobUrl) URL.revokeObjectURL(blobUrl);
             };
 
+            // The clip's camera eases in and out (measured with ffmpeg
+            // signalstats: the opening moves ~2.5x slower than the middle),
+            // which a linear scrub reads as "stuck at first, then racing" —
+            // it was never decode or network. This table, computed from the
+            // clip's own frame-to-frame motion, remaps scroll progress so the
+            // content moves at a constant perceived speed.
+            const FILM_PACE = [
+              0, 0.041, 0.0671, 0.0872, 0.104, 0.1191, 0.133, 0.1461, 0.1588,
+              0.1706, 0.1822, 0.1939, 0.2057, 0.2174, 0.2296, 0.2419, 0.2547,
+              0.267, 0.2786, 0.2901, 0.3011, 0.3122, 0.3236, 0.3349, 0.3462,
+              0.3576, 0.3687, 0.3799, 0.3909, 0.4018, 0.4129, 0.4241, 0.4349,
+              0.4458, 0.4568, 0.4675, 0.4784, 0.4898, 0.5009, 0.5126, 0.5248,
+              0.5366, 0.5489, 0.5608, 0.5721, 0.5834, 0.5947, 0.6058, 0.6172,
+              0.6287, 0.6405, 0.653, 0.6659, 0.6789, 0.6922, 0.7061, 0.7211,
+              0.7375, 0.7557, 0.7763, 0.802, 0.8347, 0.8778, 0.9371, 1,
+            ];
+            const paced = (progress: number) => {
+              const x = Math.min(Math.max(progress, 0), 1) * (FILM_PACE.length - 1);
+              const i = Math.floor(x);
+              const a = FILM_PACE[i];
+              const b = FILM_PACE[Math.min(i + 1, FILM_PACE.length - 1)];
+              return a + (b - a) * (x - i);
+            };
+
             const playhead = { p: 0 };
             gsap
               .timeline({
@@ -138,7 +162,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   ease: "none",
                   duration: 1,
                   onUpdate: () => {
-                    targetFrac = playhead.p;
+                    targetFrac = paced(playhead.p);
                   },
                 },
                 0,
