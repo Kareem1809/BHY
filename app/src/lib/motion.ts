@@ -77,6 +77,41 @@ export function useSiteMotion(deps: readonly unknown[]) {
             let targetFrac = 0;
             let blobUrl = "";
 
+            // The film stays invisible until the reader's first gesture — the
+            // poster underneath is the identical frame. The decoder warm-up
+            // (a muted play/pause iOS insists on) visibly played a beat of
+            // film on phones when it ran at load; tied to the first touch,
+            // and done while the element is hidden, nothing ever moves on
+            // its own. Same pattern as the Higgsfield engine's primeVideo.
+            film.style.opacity = "0";
+            const reveal = () => {
+              film.style.opacity = "";
+            };
+            const prime = () => {
+              if (!filmLength) {
+                reveal();
+                return;
+              }
+              film
+                .play()
+                .then(() => {
+                  film.pause();
+                  film.currentTime = Math.min(Math.max(currentFrac, 0), 0.999) * filmLength;
+                  film.addEventListener("seeked", reveal, { once: true });
+                })
+                .catch(reveal);
+            };
+            const gestureOpts = { once: true, passive: true } as const;
+            const onFirstGesture = () => {
+              window.removeEventListener("touchstart", onFirstGesture);
+              window.removeEventListener("wheel", onFirstGesture);
+              window.removeEventListener("pointerdown", onFirstGesture);
+              prime();
+            };
+            window.addEventListener("touchstart", onFirstGesture, gestureOpts);
+            window.addEventListener("wheel", onFirstGesture, gestureOpts);
+            window.addEventListener("pointerdown", onFirstGesture, gestureOpts);
+
             fetch(clipUrl)
               .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
               .then((blob) => {
@@ -87,8 +122,6 @@ export function useSiteMotion(deps: readonly unknown[]) {
                     filmLength = film.duration;
                     currentFrac = targetFrac;
                     film.currentTime = currentFrac * filmLength;
-                    // muted inline play/pause wakes the decoder (iOS needs it)
-                    film.play().then(() => film.pause()).catch(() => {});
                   },
                   { once: true },
                 );
@@ -149,6 +182,9 @@ export function useSiteMotion(deps: readonly unknown[]) {
 
             filmCleanup = () => {
               stopChase();
+              window.removeEventListener("touchstart", onFirstGesture);
+              window.removeEventListener("wheel", onFirstGesture);
+              window.removeEventListener("pointerdown", onFirstGesture);
               if (blobUrl) URL.revokeObjectURL(blobUrl);
             };
 
