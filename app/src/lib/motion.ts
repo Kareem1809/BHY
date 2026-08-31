@@ -88,33 +88,56 @@ export function useSiteMotion(deps: readonly unknown[]) {
               },
               { once: true },
             );
-            // The Higgsfield engine's core trick: pull the whole clip into
-            // memory first and play it from a blob — a seek against a blob
-            // never touches the network, which is where streamed scrubbing
-            // stutters. Until it lands, the poster holds the frame.
+            let currentFrac = 0;
+            let targetFrac = 0;
+
+            // Stream first so the film scrubs from the very first pixel of
+            // scroll; meanwhile pull the whole clip into memory in parallel —
+            // the Higgsfield trick: a seek against a blob never touches the
+            // network. The swap to the blob happens only under cover (at the
+            // untouched top, or while the sharp still hides the video), so
+            // the visitor never sees the reload.
+            film.src = clipUrl;
+            film.load();
+            let blobPending = false;
+            const swapToBlob = () => {
+              if (!blobPending || !clipObjectUrl) return;
+              blobPending = false;
+              const keep = film.currentTime;
+              film.addEventListener(
+                "loadedmetadata",
+                () => {
+                  filmLength = film.duration;
+                  film.currentTime = keep;
+                  film.play().then(() => film.pause()).catch(() => {});
+                },
+                { once: true },
+              );
+              film.src = clipObjectUrl;
+              film.load();
+            };
             fetch(clipUrl)
               .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
               .then((blob) => {
                 clipObjectUrl = URL.createObjectURL(blob);
-                film.src = clipObjectUrl;
-                film.load();
+                blobPending = true;
+                if (targetFrac < 0.005 && currentFrac < 0.005) swapToBlob();
               })
               .catch(() => {
-                // fall back to streaming rather than showing nothing
-                film.src = clipUrl;
-                film.load();
+                blobPending = false;
               });
 
             // The chase, verbatim from the Higgsfield engine: glide a fifth
             // of the way toward the target each frame, skip while a seek is
             // in flight, and only write currentTime past a small epsilon —
-            // piled-up seeks are exactly what reads as stutter.
-            let currentFrac = 0;
-            let targetFrac = 0;
+            // piled-up seeks are exactly what reads as stutter. One addition:
+            // a big gap (clip finished loading mid-scroll) teleports in a
+            // single seek instead of janking through half the film.
             const epsilon = big ? 0.008 : 0.02;
             const chase = () => {
               if (!filmLength || film.seeking) return;
-              currentFrac += (targetFrac - currentFrac) * 0.2;
+              const gap = targetFrac - currentFrac;
+              currentFrac = Math.abs(gap) > 0.35 ? targetFrac : currentFrac + gap * 0.2;
               const t = Math.min(Math.max(currentFrac, 0), 0.999) * filmLength;
               if (Math.abs(film.currentTime - t) > epsilon) {
                 try {
@@ -139,7 +162,11 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 decoded.then(() => {
                   // only if the visitor is still resting on this very frame
                   const j = Math.round(targetFrac * (SHARP_FRAMES - 1));
-                  if (j === i) sharpImg.style.opacity = "1";
+                  if (j !== i) return;
+                  sharpImg.style.opacity = "1";
+                  // the still now hides the video — perfect moment to swap
+                  // the streamed source for the in-memory blob
+                  window.setTimeout(swapToBlob, 180);
                 });
               };
               if (sharpImg.src.endsWith(want)) show();
