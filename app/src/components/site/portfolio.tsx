@@ -4,10 +4,40 @@ import type { SiteStrings } from "../../lib/i18n";
 import { Arrow } from "./arrow";
 import { Words } from "./words";
 
+// Four frames per project: one wide hero and a row of three details.
 const SLIDE_IMAGES = [
-  { main: "/assets/project-1.jpg", swatch: "/assets/project-1-detail.jpg" },
-  { main: "/assets/project-2.jpg", swatch: "/assets/project-2-detail.jpg" },
-  { main: "/assets/project-3.jpg", swatch: "/assets/project-3-detail.jpg" },
+  {
+    hero: "/assets/projects/proj1-1.jpg",
+    thumbs: [
+      "/assets/projects/proj1-2.jpg",
+      "/assets/projects/proj1-3.jpg",
+      "/assets/projects/proj1-4.jpg",
+    ],
+  },
+  {
+    hero: "/assets/projects/proj2-1.jpg",
+    thumbs: [
+      "/assets/projects/proj2-2.jpg",
+      "/assets/projects/proj2-3.jpg",
+      "/assets/projects/proj2-4.jpg",
+    ],
+  },
+  {
+    hero: "/assets/projects/proj3-1.jpg",
+    thumbs: [
+      "/assets/projects/proj3-2.jpg",
+      "/assets/projects/proj3-3.jpg",
+      "/assets/projects/proj3-4.jpg",
+    ],
+  },
+  {
+    hero: "/assets/projects/proj4-1.jpg",
+    thumbs: [
+      "/assets/projects/proj4-2.jpg",
+      "/assets/projects/proj4-3.jpg",
+      "/assets/projects/proj4-4.jpg",
+    ],
+  },
 ];
 
 export function Portfolio({ t }: { t: SiteStrings }) {
@@ -32,68 +62,62 @@ export function Portfolio({ t }: { t: SiteStrings }) {
         </div>
         <div
           key={index}
-          className="bhy-slide mt-16 grid grid-cols-1 gap-12 md:mt-24 md:grid-cols-12"
+          className="bhy-slide mt-16 grid grid-cols-1 gap-10 md:mt-24 md:grid-cols-12 md:gap-12"
         >
-          <figure className="bhy-slide-img bhy-fig overflow-hidden md:col-span-6">
-            <img
-              src={images.main}
-              alt={slide.title}
-              loading="lazy"
-                      decoding="async"
-              className="aspect-[3/4] w-full object-cover"
-            />
-          </figure>
-          <div className="flex flex-col md:col-span-6">
+          <div className="md:col-span-7">
+            <figure className="bhy-slide-img bhy-fig overflow-hidden">
+              <img
+                src={images.hero}
+                alt={slide.title}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[16/10] w-full object-cover"
+              />
+            </figure>
+            <div className="bhy-slide-swatch mt-3 grid grid-cols-3 gap-3">
+              {images.thumbs.map((src) => (
+                <figure key={src} className="bhy-fig overflow-hidden">
+                  <img
+                    src={src}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-[4/5] w-full object-cover"
+                  />
+                </figure>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col md:col-span-5">
             <div className="flex items-baseline justify-between text-sm text-[#6B5748]">
-              <span>
-                {slide.place}, {slide.year}
-              </span>
+              <span>{slide.place}</span>
               <span dir="ltr" className="tracking-[0.2em]">
                 {String(index + 1).padStart(2, "0")}/{String(count).padStart(2, "0")}
               </span>
             </div>
-            <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-12">
-              <div className="lg:col-span-7">
-                <h3 className="bhy-display-3 text-[#3E2E23]">{slide.title}</h3>
-                <p className="mt-6 max-w-[38ch] text-base leading-relaxed text-[#6B5748]">
-                  {slide.description}
-                </p>
-              </div>
-              <figure className="lg:col-span-5">
-                <div className="bhy-slide-swatch bhy-fig overflow-hidden">
-                  <img
-                    src={images.swatch}
-                    alt=""
-                    loading="lazy"
-                      decoding="async"
-                    className="aspect-square w-full object-cover"
-                  />
-                </div>
-                <figcaption className="mt-4 text-sm leading-relaxed text-[#6B5748]">
-                  {slide.swatch}
-                </figcaption>
-              </figure>
+            <div className="mt-10">
+              <h3 className="bhy-display-3 text-[#3E2E23]">{slide.title}</h3>
+              <p className="mt-6 max-w-[44ch] text-base leading-relaxed text-[#6B5748]">
+                {slide.description}
+              </p>
             </div>
-            <div className="mt-auto flex items-end justify-between gap-6 pt-12">
-              <p className="text-sm leading-relaxed text-[#6B5748]">{slide.note}</p>
-              <div className="flex shrink-0 gap-3">
-                <button
-                  type="button"
-                  onClick={prev}
-                  aria-label={t.portfolio.prev}
-                  className="bhy-carousel-btn"
-                >
-                  <Arrow className="w-5 rotate-180" />
-                </button>
-                <button
-                  type="button"
-                  onClick={next}
-                  aria-label={t.portfolio.next}
-                  className="bhy-carousel-btn bhy-carousel-btn-next"
-                >
-                  <Arrow className="w-5" />
-                </button>
-              </div>
+            <div className="mt-auto flex items-end justify-end gap-3 pt-12">
+              <button
+                type="button"
+                onClick={prev}
+                aria-label={t.portfolio.prev}
+                className="bhy-carousel-btn"
+              >
+                <Arrow className="w-5 rotate-180" />
+              </button>
+              <button
+                type="button"
+                onClick={next}
+                aria-label={t.portfolio.next}
+                className="bhy-carousel-btn bhy-carousel-btn-next"
+              >
+                <Arrow className="w-5" />
+              </button>
             </div>
           </div>
         </div>
