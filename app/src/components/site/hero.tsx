@@ -38,7 +38,7 @@ export function Hero({ t }: { t: SiteStrings }) {
         <img
           data-hero-sharp
           alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-150 ease-linear"
+          className="absolute inset-0 h-full w-full object-cover opacity-0"
         />
       </div>
       <div

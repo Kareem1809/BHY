@@ -104,11 +104,21 @@ export function useSiteMotion(deps: readonly unknown[]) {
               if (!blobPending || !clipObjectUrl) return;
               blobPending = false;
               const keep = film.currentTime;
+              // hide the element for the reload — the poster (or the sharp
+              // still) is pixel-identical behind it, so nothing blinks
+              film.style.opacity = "0";
               film.addEventListener(
                 "loadedmetadata",
                 () => {
                   filmLength = film.duration;
                   film.currentTime = keep;
+                  film.addEventListener(
+                    "seeked",
+                    () => {
+                      film.style.opacity = "";
+                    },
+                    { once: true },
+                  );
                   film.play().then(() => film.pause()).catch(() => {});
                 },
                 { once: true },
@@ -137,7 +147,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
             const chase = () => {
               if (!filmLength || film.seeking) return;
               const gap = targetFrac - currentFrac;
-              currentFrac = Math.abs(gap) > 0.35 ? targetFrac : currentFrac + gap * 0.2;
+              currentFrac = Math.abs(gap) > 0.35 ? targetFrac : currentFrac + gap * 0.28;
               const t = Math.min(Math.max(currentFrac, 0), 0.999) * filmLength;
               if (Math.abs(film.currentTime - t) > epsilon) {
                 try {
@@ -151,10 +161,16 @@ export function useSiteMotion(deps: readonly unknown[]) {
 
             let settleTimer = 0;
             const hideSharp = () => {
-              if (sharpImg) sharpImg.style.opacity = "0";
+              if (!sharpImg) return;
+              // vanish fast on movement — a slow fade would ghost the film
+              sharpImg.style.transition = "opacity 0.08s linear";
+              sharpImg.style.opacity = "0";
             };
             const settle = () => {
               if (!sharpImg || !filmLength || !sharpBase) return;
+              // the headline still owns the opening stretch — a sharpness pop
+              // behind it reads as a glitch, so the still stays away there
+              if (targetFrac < 0.12) return;
               const i = Math.round(targetFrac * (SHARP_FRAMES - 1));
               const want = `${sharpBase}/${String(i).padStart(3, "0")}.webp`;
               const show = () => {
@@ -163,6 +179,8 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   // only if the visitor is still resting on this very frame
                   const j = Math.round(targetFrac * (SHARP_FRAMES - 1));
                   if (j !== i) return;
+                  // ease in like a focus pull, not a layer snap
+                  sharpImg.style.transition = "opacity 0.45s ease-out";
                   sharpImg.style.opacity = "1";
                   // the still now hides the video — perfect moment to swap
                   // the streamed source for the in-memory blob
@@ -206,7 +224,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
                     targetFrac = playhead.p;
                     hideSharp();
                     window.clearTimeout(settleTimer);
-                    settleTimer = window.setTimeout(settle, 160);
+                    settleTimer = window.setTimeout(settle, 450);
                   },
                 },
                 0,
