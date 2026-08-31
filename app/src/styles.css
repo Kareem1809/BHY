@@ -311,6 +311,27 @@ html {
   opacity: 1;
 }
 
+/* The hero copy leaves on a class toggle, never per scroll frame — see
+   motion.ts. A long, soft transition reads as "it lingered, then slipped
+   away", and because it is a plain CSS transition it runs on the compositor
+   instead of fighting the film for the main thread. */
+[data-hero-copy] {
+  transition:
+    opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+[data-hero-veil] {
+  transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bhy-film-clear [data-hero-copy] {
+  opacity: 0;
+  transform: translateY(-32px);
+  pointer-events: none;
+}
+.bhy-film-clear [data-hero-veil] {
+  opacity: 0.45;
+}
+
 /* hero entrance: runs once on load and ends fully visible.
    Timing follows Material 3 motion tokens — entrances ride the
    emphasized-decelerate curve cubic-bezier(0.05, 0.7, 0.1, 1)

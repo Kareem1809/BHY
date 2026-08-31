@@ -144,16 +144,24 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 },
                 0,
               )
-              // The headline holds for the first third of the film, then
-              // leaves slowly (over another 40%) rather than snapping away.
-              .to(
-                "[data-hero-copy]",
-                { opacity: 0, y: -40, ease: "power1.in", duration: 0.4 },
-                0.32,
-              )
-              // ...and the legibility veil thins out on the same schedule, so
-              // the film reads clean and bright once the text is gone.
-              .to("[data-hero-veil]", { opacity: 0.3, ease: "none", duration: 0.4 }, 0.32);
+              ;
+
+            // The copy and the veil deliberately do NOT ride the scrub. An
+            // element whose opacity changes every frame on top of the video
+            // costs the video its fast compositing path, and that — not the
+            // decoding, the network or the engine — is the stutter that kept
+            // moving around: it always sat exactly where this fade sat. So
+            // the fade is one class toggle and a plain CSS transition, off
+            // the per-frame path entirely.
+            const stage = document.querySelector("[data-hero-stage]");
+            if (stage) {
+              ScrollTrigger.create({
+                trigger: hero,
+                start: "20% top",
+                onEnter: () => stage.classList.add("bhy-film-clear"),
+                onLeaveBack: () => stage.classList.remove("bhy-film-clear"),
+              });
+            }
           }
 
           if (nav && hero) {
