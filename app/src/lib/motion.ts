@@ -68,18 +68,26 @@ export function useSiteMotion(deps: readonly unknown[]) {
           const filmCanvas = document.querySelector<HTMLCanvasElement>("[data-hero-canvas]");
           const paint2d = filmCanvas?.getContext("2d");
           if (hero && filmCanvas && paint2d) {
-            // Retina laptops and up read the 2880px frames; phones take the
-            // 1440px cut and a quarter of the bytes.
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             const density = window.innerWidth * dpr;
-            const seqBase = density >= 2000 ? filmCanvas.dataset.seqUhd : filmCanvas.dataset.seqFhd;
+            const uhd = density >= 2000;
+            // Two prints of the same film. Scrub paints only the light
+            // "motion" print — a 2880px still costs 20-40ms to decode and
+            // that is exactly what read as stutter — while the full-res
+            // print is laid over it the moment the scroll comes to rest,
+            // so standing frames stay razor sharp.
+            const motionBase = uhd ? filmCanvas.dataset.motionUhd : filmCanvas.dataset.motionFhd;
+            const sharpBase = uhd ? filmCanvas.dataset.seqUhd : filmCanvas.dataset.seqFhd;
             const FRAMES = Number(filmCanvas.dataset.frames) || 241;
-            const frameUrl = (i: number) => `${seqBase}/${String(i).padStart(3, "0")}.webp`;
+            const frameUrl = (i: number) => `${motionBase}/${String(i).padStart(3, "0")}.webp`;
 
             const frames: (HTMLImageElement | undefined)[] = new Array(FRAMES);
             const ready = new Uint8Array(FRAMES);
+            const sharp: (HTMLImageElement | undefined)[] = new Array(FRAMES);
             let shownPos = -1; // fractional frame currently painted
             let targetPos = 0; // fractional frame the scrub wants
+            let settleTimer = 0;
+            let lastWarm = -1;
 
             const sizeCanvas = () => {
               filmCanvas.width = Math.round(filmCanvas.clientWidth * dpr);
@@ -120,6 +128,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
             // While the sequence streams in, show the closest frame that has
             // arrived — the film starts coarse and sharpens into place.
             const paintNearest = () => {
+              if (shownPos === -1 && targetPos <= 0.02) return; // poster shows, already full-res
               if (paintBlend()) return;
               const t = Math.round(targetPos);
               for (let d = 0; d < FRAMES; d++) {
@@ -144,6 +153,43 @@ export function useSiteMotion(deps: readonly unknown[]) {
               frames[i] = img;
             };
 
+            // Once the scroll rests for a beat, print the full-res still of
+            // the frame we stopped on. Loads on demand; if the visitor moves
+            // on before it arrives, the paint guard just drops it.
+            const settle = () => {
+              const i = Math.round(targetPos);
+              const finish = (img: HTMLImageElement) => {
+                const p = img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+                p.then(() => {
+                  if (Math.abs(targetPos - i) < 0.6) drawCover(img, 1);
+                });
+              };
+              const have = sharp[i];
+              if (have) {
+                if (have.complete && have.naturalWidth) finish(have);
+                return;
+              }
+              const img = new Image();
+              img.decoding = "async";
+              img.onload = () => finish(img);
+              img.src = `${sharpBase}/${String(i).padStart(3, "0")}.webp`;
+              sharp[i] = img;
+            };
+
+            // Keep the decode cache warm a few frames ahead of the direction
+            // of travel so motion paints never decode on the main thread.
+            const warmAhead = (dir: number) => {
+              const t = Math.round(targetPos);
+              if (t === lastWarm) return;
+              lastWarm = t;
+              for (const d of [1, 2, 4, 6]) {
+                const j = t + d * dir;
+                if (j < 0 || j >= FRAMES) continue;
+                if (!frames[j]) loadFrame(j);
+                else if (ready[j]) frames[j]!.decode?.().catch(() => {});
+              }
+            };
+
             // Two-wave load: every 8th frame first so scrubbing works within
             // the first second, then the gaps fill in and it turns buttery.
             for (let i = 0; i < FRAMES; i += 8) loadFrame(i);
@@ -155,6 +201,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
             window.addEventListener("resize", sizeCanvas);
             filmCleanup = () => {
               window.clearTimeout(fillTimer);
+              window.clearTimeout(settleTimer);
               window.removeEventListener("resize", sizeCanvas);
             };
 
@@ -183,8 +230,14 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   ease: "none",
                   duration: 1,
                   onUpdate: () => {
+                    const prev = targetPos;
                     targetPos = playhead.p * (FRAMES - 1);
-                    if (Math.abs(targetPos - shownPos) > 0.02) paintNearest();
+                    if (Math.abs(targetPos - shownPos) > 0.02) {
+                      paintNearest();
+                      warmAhead(targetPos >= prev ? 1 : -1);
+                      window.clearTimeout(settleTimer);
+                      settleTimer = window.setTimeout(settle, 150);
+                    }
                   },
                 },
                 0,
