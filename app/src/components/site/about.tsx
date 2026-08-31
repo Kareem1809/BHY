@@ -30,6 +30,7 @@ export function About({ t }: { t: SiteStrings }) {
                 src="/assets/about-main.jpg"
                 alt=""
                 loading="lazy"
+                      decoding="async"
                 className="aspect-[3/4] w-full object-cover"
               />
             </figure>
@@ -43,6 +44,7 @@ export function About({ t }: { t: SiteStrings }) {
                 src="/assets/about-side.jpg"
                 alt=""
                 loading="lazy"
+                      decoding="async"
                 className="aspect-[4/3] w-full object-cover"
               />
             </figure>

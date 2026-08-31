@@ -39,6 +39,7 @@ export function Portfolio({ t }: { t: SiteStrings }) {
               src={images.main}
               alt={slide.title}
               loading="lazy"
+                      decoding="async"
               className="aspect-[3/4] w-full object-cover"
             />
           </figure>
@@ -64,6 +65,7 @@ export function Portfolio({ t }: { t: SiteStrings }) {
                     src={images.swatch}
                     alt=""
                     loading="lazy"
+                      decoding="async"
                     className="aspect-square w-full object-cover"
                   />
                 </div>

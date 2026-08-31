@@ -28,6 +28,7 @@ export function Journal({ t }: { t: SiteStrings }) {
                   src={entry.img}
                   alt=""
                   loading="lazy"
+                      decoding="async"
                   className={`${entry.aspect} w-full object-cover`}
                 />
               </figure>

@@ -9,6 +9,7 @@ export function Services({ t }: { t: SiteStrings }) {
         src="/assets/hero.jpg"
         alt=""
         loading="lazy"
+                      decoding="async"
         data-bg-parallax
         className="absolute inset-0 h-full w-full object-cover object-bottom opacity-35 blur-[2px]"
       />
@@ -49,6 +50,7 @@ export function Services({ t }: { t: SiteStrings }) {
                       src={`/assets/service-${i + 1}.jpg`}
                       alt=""
                       loading="lazy"
+                      decoding="async"
                       className="aspect-[3/4] w-full object-cover"
                     />
                   </figure>

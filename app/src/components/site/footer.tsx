@@ -19,6 +19,7 @@ export function Footer({ t }: { t: SiteStrings }) {
           src="/assets/logo.png"
           alt="Basma Haj Yahia, architecture & interior design"
           loading="lazy"
+                      decoding="async"
           className="w-72 max-w-full shrink-0 md:justify-self-start md:w-[30rem]"
         />
         <div className="flex flex-col gap-12 sm:flex-row sm:gap-16 md:justify-self-center md:gap-24">
