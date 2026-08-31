@@ -277,6 +277,21 @@ export function useSiteMotion(deps: readonly unknown[]) {
             );
           }
 
+          // Scroll-linked growth: the element enters slightly small and
+          // grows to full size as it comes down the page (and shrinks back
+          // on the way up). Pure transform — the compositor plays it.
+          document.querySelectorAll<HTMLElement>("[data-grow]").forEach((el) => {
+            gsap.fromTo(
+              el,
+              { scale: 0.86 },
+              {
+                scale: 1,
+                ease: "none",
+                scrollTrigger: { trigger: el, start: "top 96%", end: "top 30%", scrub: 0.9 },
+              },
+            );
+          });
+
           document.querySelectorAll<HTMLElement>("[data-drift]").forEach((el) => {
             const distance = Number(el.dataset.drift) || 48;
             gsap.fromTo(

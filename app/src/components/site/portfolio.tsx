@@ -86,7 +86,7 @@ export function Portfolio({ t }: { t: SiteStrings }) {
             <Words text={t.portfolio.title} />
           </h2>
         </div>
-        <div className="mt-16 grid md:mt-24">
+        <div data-grow className="mt-16 grid origin-center md:mt-24">
           {t.portfolio.slides.map((mapSlide, i) => {
             const mapImages = SLIDE_IMAGES[i];
             const state =
