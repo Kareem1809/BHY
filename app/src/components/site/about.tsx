@@ -25,7 +25,7 @@ export function About({ t }: { t: SiteStrings }) {
         </div>
         <div className="md:col-span-7">
           <div className="grid grid-cols-12 items-start gap-6">
-            <figure data-img-reveal data-parallax className="bhy-fig col-span-7 overflow-hidden">
+            <figure data-img-reveal className="bhy-fig col-span-7 overflow-hidden">
               <img
                 src="/assets/about-main.jpg"
                 alt=""
@@ -36,7 +36,6 @@ export function About({ t }: { t: SiteStrings }) {
             </figure>
             <figure
               data-img-reveal
-              data-parallax
               data-drift="90"
               className="bhy-fig col-span-5 mt-16 overflow-hidden md:mt-28"
             >

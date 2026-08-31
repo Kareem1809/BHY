@@ -339,6 +339,7 @@ html {
    promoted layer are handled by the compositor instead. */
 [data-drift]:has(img),
 [data-parallax] img,
+[data-img-reveal] img,
 [data-bg-parallax] {
   will-change: transform;
 }

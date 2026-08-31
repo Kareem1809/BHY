@@ -113,10 +113,30 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 }
               }
             };
-            gsap.ticker.add(chase);
+            // Only while the film is on screen: this used to tick for the
+            // whole length of the page, poking the video element on every
+            // frame of every section below.
+            let chasing = false;
+            const startChase = () => {
+              if (chasing) return;
+              chasing = true;
+              gsap.ticker.add(chase);
+            };
+            const stopChase = () => {
+              if (!chasing) return;
+              chasing = false;
+              gsap.ticker.remove(chase);
+            };
+            startChase();
+            ScrollTrigger.create({
+              trigger: hero,
+              start: "top bottom",
+              end: "bottom top",
+              onToggle: (self) => (self.isActive ? startChase() : stopChase()),
+            });
 
             filmCleanup = () => {
-              gsap.ticker.remove(chase);
+              stopChase();
               if (blobUrl) URL.revokeObjectURL(blobUrl);
             };
 
@@ -237,12 +257,18 @@ export function useSiteMotion(deps: readonly unknown[]) {
             );
           });
 
+          // The frame opens by easing its photograph back to rest inside a
+          // fixed crop, not by animating clip-path: a clip-path tween cannot
+          // be composited, so it repainted the image on every scroll frame —
+          // the same repaint-per-frame cost that made the film hitch.
           document.querySelectorAll<HTMLElement>("[data-img-reveal]").forEach((el) => {
+            const img = el.querySelector("img");
+            if (!img) return;
             gsap.fromTo(
-              el,
-              { clipPath: "inset(12% 6% 12% 6%)" },
+              img,
+              { scale: 1.16 },
               {
-                clipPath: "inset(0% 0% 0% 0%)",
+                scale: 1,
                 ease: "none",
                 scrollTrigger: { trigger: el, start: "top 96%", end: "top 48%", scrub: 0.9 },
               },

@@ -23,7 +23,7 @@ export function Journal({ t }: { t: SiteStrings }) {
         <div className="mt-16 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 md:mt-24 md:grid-cols-4">
           {ENTRIES.map((entry, i) => (
             <article key={entry.img} data-drift={[36, 72, 24, 56][i]} className={entry.offset}>
-              <figure data-img-reveal data-parallax className="bhy-fig overflow-hidden">
+              <figure data-img-reveal className="bhy-fig overflow-hidden">
                 <img
                   src={entry.img}
                   alt=""

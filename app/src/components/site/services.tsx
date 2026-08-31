@@ -45,7 +45,7 @@ export function Services({ t }: { t: SiteStrings }) {
                   <span dir="ltr" className="block text-sm tracking-[0.2em] text-[#6B5748]">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <figure data-parallax className="bhy-fig mt-5 overflow-hidden">
+                  <figure className="bhy-fig mt-5 overflow-hidden">
                     <img
                       src={`/assets/service-${i + 1}.jpg`}
                       alt=""
