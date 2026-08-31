@@ -59,95 +59,50 @@ export function useSiteMotion(deps: readonly unknown[]) {
         const ctx = gsap.context(() => {
           const hero = document.querySelector("[data-hero]");
 
-          // Scroll-driven film, the proven Higgsfield mechanism: the hero pins
-          // and every ticker frame the video's currentTime glides a fraction
-          // of the way toward where the scroll points. Nothing ever plays on
-          // its own; scrolling down advances the film, scrolling up rewinds
-          // it. 1080p with a keyframe every 4 frames keeps each seek cheap —
-          // the still-sequence experiments stuttered on laptop-class decode,
-          // this glide does not. When the scroll rests, the razor-sharp
-          // 2880px still of that exact frame fades in over the video.
+          // Scroll-driven film — the Higgsfield engine, nothing more:
+          // fetch the clip fully into memory, then each tick glide the
+          // playhead a fifth of the way toward where the scroll points.
+          // Until the blob lands the poster holds the opening frame, and
+          // playback joins wherever the reader already is — one seek, no
+          // catch-up journey, no source swapping.
           const film = document.querySelector<HTMLVideoElement>("[data-hero-film]");
-          const sharpImg = document.querySelector<HTMLImageElement>("[data-hero-sharp]");
           if (hero && film) {
             const density = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
             const big = density >= 2000;
             const clipUrl = (big ? film.dataset.srcHd : film.dataset.srcSm) ?? "";
-            const sharpBase = big ? film.dataset.sharpUhd : film.dataset.sharpFhd;
-            const SHARP_FRAMES = Number(film.dataset.frames) || 241;
 
             let filmLength = 0;
-            let clipObjectUrl = "";
-            film.addEventListener(
-              "loadedmetadata",
-              () => {
-                filmLength = film.duration;
-                // muted inline play/pause wakes the decoder (iOS needs it)
-                film.play().then(() => film.pause()).catch(() => {});
-                ScrollTrigger.refresh();
-              },
-              { once: true },
-            );
             let currentFrac = 0;
             let targetFrac = 0;
+            let blobUrl = "";
 
-            // Stream first so the film scrubs from the very first pixel of
-            // scroll; meanwhile pull the whole clip into memory in parallel —
-            // the Higgsfield trick: a seek against a blob never touches the
-            // network. The swap to the blob happens only under cover (at the
-            // untouched top, or while the sharp still hides the video), so
-            // the visitor never sees the reload.
-            film.src = clipUrl;
-            film.load();
-            let blobPending = false;
-            const swapToBlob = () => {
-              if (!blobPending || !clipObjectUrl) return;
-              blobPending = false;
-              const keep = film.currentTime;
-              // hide the element for the reload — the poster (or the sharp
-              // still) is pixel-identical behind it, so nothing blinks
-              film.style.opacity = "0";
-              film.addEventListener(
-                "loadedmetadata",
-                () => {
-                  filmLength = film.duration;
-                  film.currentTime = keep;
-                  film.addEventListener(
-                    "seeked",
-                    () => {
-                      film.style.opacity = "";
-                    },
-                    { once: true },
-                  );
-                  film.play().then(() => film.pause()).catch(() => {});
-                },
-                { once: true },
-              );
-              film.src = clipObjectUrl;
-              film.load();
-            };
             fetch(clipUrl)
               .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
               .then((blob) => {
-                clipObjectUrl = URL.createObjectURL(blob);
-                blobPending = true;
-                if (targetFrac < 0.005 && currentFrac < 0.005) swapToBlob();
+                blobUrl = URL.createObjectURL(blob);
+                film.addEventListener(
+                  "loadedmetadata",
+                  () => {
+                    filmLength = film.duration;
+                    currentFrac = targetFrac;
+                    film.currentTime = currentFrac * filmLength;
+                    // muted inline play/pause wakes the decoder (iOS needs it)
+                    film.play().then(() => film.pause()).catch(() => {});
+                  },
+                  { once: true },
+                );
+                film.src = blobUrl;
+                film.load();
               })
-              .catch(() => {
-                blobPending = false;
-              });
+              .catch(() => {});
 
-            // The chase, verbatim from the Higgsfield engine: glide a fifth
-            // of the way toward the target each frame, skip while a seek is
-            // in flight, and only write currentTime past a small epsilon —
-            // piled-up seeks are exactly what reads as stutter. One addition:
-            // a big gap (clip finished loading mid-scroll) teleports in a
-            // single seek instead of janking through half the film.
+            // Glide toward the target; write currentTime only past a small
+            // epsilon and never while a seek is in flight — piled-up seeks
+            // are what reads as stutter.
             const epsilon = big ? 0.008 : 0.02;
             const chase = () => {
               if (!filmLength || film.seeking) return;
-              const gap = targetFrac - currentFrac;
-              currentFrac = Math.abs(gap) > 0.35 ? targetFrac : currentFrac + gap * 0.28;
+              currentFrac += (targetFrac - currentFrac) * 0.2;
               const t = Math.min(Math.max(currentFrac, 0), 0.999) * filmLength;
               if (Math.abs(film.currentTime - t) > epsilon) {
                 try {
@@ -159,45 +114,9 @@ export function useSiteMotion(deps: readonly unknown[]) {
             };
             gsap.ticker.add(chase);
 
-            let settleTimer = 0;
-            const hideSharp = () => {
-              if (!sharpImg) return;
-              // vanish fast on movement — a slow fade would ghost the film
-              sharpImg.style.transition = "opacity 0.08s linear";
-              sharpImg.style.opacity = "0";
-            };
-            const settle = () => {
-              if (!sharpImg || !filmLength || !sharpBase) return;
-              // the headline still owns the opening stretch — a sharpness pop
-              // behind it reads as a glitch, so the still stays away there
-              if (targetFrac < 0.12) return;
-              const i = Math.round(targetFrac * (SHARP_FRAMES - 1));
-              const want = `${sharpBase}/${String(i).padStart(3, "0")}.webp`;
-              const show = () => {
-                const decoded = sharpImg.decode ? sharpImg.decode().catch(() => {}) : Promise.resolve();
-                decoded.then(() => {
-                  // only if the visitor is still resting on this very frame
-                  const j = Math.round(targetFrac * (SHARP_FRAMES - 1));
-                  if (j !== i) return;
-                  // ease in like a focus pull, not a layer snap
-                  sharpImg.style.transition = "opacity 0.45s ease-out";
-                  sharpImg.style.opacity = "1";
-                  // the still now hides the video — perfect moment to swap
-                  // the streamed source for the in-memory blob
-                  window.setTimeout(swapToBlob, 180);
-                });
-              };
-              if (sharpImg.src.endsWith(want)) show();
-              else {
-                sharpImg.onload = show;
-                sharpImg.src = want;
-              }
-            };
-
             filmCleanup = () => {
               gsap.ticker.remove(chase);
-              window.clearTimeout(settleTimer);
-              if (clipObjectUrl) URL.revokeObjectURL(clipObjectUrl);
+              if (blobUrl) URL.revokeObjectURL(blobUrl);
             };
 
             const playhead = { p: 0 };
@@ -208,8 +127,6 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   start: "top top",
                   end: "+=185%",
                   pin: true,
-                  // scrub feeds the target directly; the chase above is the
-                  // only smoothing layer, exactly like the Higgsfield engine
                   scrub: true,
                   anticipatePin: 1,
                 },
@@ -222,9 +139,6 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   duration: 1,
                   onUpdate: () => {
                     targetFrac = playhead.p;
-                    hideSharp();
-                    window.clearTimeout(settleTimer);
-                    settleTimer = window.setTimeout(settle, 450);
                   },
                 },
                 0,

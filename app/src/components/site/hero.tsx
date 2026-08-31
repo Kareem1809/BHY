@@ -8,13 +8,11 @@ export function Hero({ t }: { t: SiteStrings }) {
       id="top"
       className="relative flex min-h-dvh flex-col justify-end overflow-hidden bg-[#2A1E16]"
     >
-      {/* The film never plays on its own — scroll is the playhead, the same
-          chase mechanism as the Higgsfield build: each tick the video's
-          currentTime glides a fraction toward where the scroll points (1080p +
-          a keyframe every 4 frames keeps every seek cheap, forward or back).
-          The instant the scroll rests, the razor-sharp 2880px still of that
-          exact frame fades in on top. No src on the video until motion.ts
-          picks a tier, so reduced-motion and no-JS visitors get the poster. */}
+      {/* The film never plays on its own — scroll is the playhead (the
+          Higgsfield chase: the clip loads fully into memory, then currentTime
+          glides toward where the scroll points). The poster holds the opening
+          frame until the clip is ready; reduced-motion and no-JS visitors
+          simply keep it. */}
       <div aria-hidden="true" className="bhy-hero-img absolute inset-0">
         <img
           src="/assets/hero-poster.jpg"
@@ -26,19 +24,11 @@ export function Hero({ t }: { t: SiteStrings }) {
           data-hero-film
           data-src-hd="/assets/hero-scrub-hd.mp4"
           data-src-sm="/assets/hero-scrub-sm.mp4"
-          data-sharp-uhd="/assets/hero-seq/uhd"
-          data-sharp-fhd="/assets/hero-seq/fhd"
-          data-frames="241"
           muted
           playsInline
-          preload="auto"
+          preload="none"
           disablePictureInPicture
           className="absolute inset-0 h-full w-full object-cover"
-        />
-        <img
-          data-hero-sharp
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-0"
         />
       </div>
       <div
