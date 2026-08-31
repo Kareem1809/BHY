@@ -55,6 +55,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
         }
 
         let filmCleanup: Cleanup = () => {};
+        let navCleanup: Cleanup = () => {};
 
         const ctx = gsap.context(() => {
           const hero = document.querySelector("[data-hero]");
@@ -174,11 +175,22 @@ export function useSiteMotion(deps: readonly unknown[]) {
             // Tuck the nav away while scrolling down, bring it back on the
             // first upward movement — but never during the film: the logo is
             // meant to hold the corner for the whole hero.
+            // The hero's height is measured on refresh and cached: reading
+            // offsetHeight inside onUpdate forced a layout flush on every
+            // scroll frame of the whole page, right after GSAP had written
+            // its transforms — layout thrashing, worst where the most tweens
+            // run at once (Services), which is exactly where it showed.
+            let heroHeight = (hero as HTMLElement).offsetHeight;
+            const measureHero = () => {
+              heroHeight = (hero as HTMLElement).offsetHeight;
+            };
+            ScrollTrigger.addEventListener("refresh", measureHero);
+            navCleanup = () => ScrollTrigger.removeEventListener("refresh", measureHero);
             ScrollTrigger.create({
               start: 0,
               end: "max",
               onUpdate: (self) => {
-                const pastHero = self.scroll() > (hero as HTMLElement).offsetHeight;
+                const pastHero = self.scroll() > heroHeight;
                 nav.classList.toggle("bhy-nav-hidden", pastHero && self.direction === 1);
               },
             });
@@ -278,6 +290,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
 
         cleanup = () => {
           filmCleanup();
+          navCleanup();
           ctx.revert();
           gsap.ticker.remove(tick);
           lenis.destroy();
