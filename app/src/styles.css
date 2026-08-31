@@ -502,44 +502,60 @@ html {
 .bhy-carousel-btn:active {
   transform: scale(0.94);
 }
-/* Slide changes are cinematic but never keep you waiting: the picture is
-   VISIBLE from the very first frame (the old wipe hid it for most of a
-   second) and settles into its frame — a transform-only move the compositor
-   plays, so it cannot stutter. Details then follow one after another. */
-.bhy-slide {
-  animation: bhy-slide-rise 0.45s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+/* All four slides stay mounted and stacked on one grid cell, so their images
+   load ONCE and switching never waits on the network — the outgoing slide
+   plays its exit while the incoming one arrives, and the stage is never
+   empty for even a frame. Animations are scoped to the state classes so they
+   restart on every switch, and everything is transform/opacity only. */
+.bhy-slide--idle {
+  visibility: hidden;
+  pointer-events: none;
 }
-.bhy-slide-img img {
-  animation: bhy-hero-settle 0.8s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+.bhy-slide--leaving {
+  pointer-events: none;
+  animation: bhy-slide-exit 0.45s cubic-bezier(0.3, 0, 0.8, 0.15) both;
+}
+@keyframes bhy-slide-exit {
+  to {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.985);
+  }
+}
+.bhy-slide--active {
+  animation: bhy-slide-rise 0.5s cubic-bezier(0.05, 0.7, 0.1, 1) both;
 }
 @keyframes bhy-slide-rise {
   from {
-    transform: translateY(18px);
+    transform: translateY(20px);
   }
   to {
     transform: translateY(0);
   }
 }
-@keyframes bhy-hero-settle {
+/* the hero sweeps into its frame — bold, and on screen from the first tick */
+.bhy-slide--active .bhy-slide-img img {
+  animation: bhy-hero-sweep 0.85s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+}
+@keyframes bhy-hero-sweep {
   from {
-    transform: scale(1.16) translateX(-3%);
+    transform: translateX(104%) scale(1.08);
   }
   to {
-    transform: scale(1) translateX(0);
+    transform: translateX(0) scale(1);
   }
 }
 /* the three details rise in one after another */
-.bhy-slide .bhy-slide-swatch figure {
-  animation: bhy-fade-up 0.55s cubic-bezier(0.05, 0.7, 0.1, 1) backwards;
+.bhy-slide--active .bhy-slide-swatch figure {
+  animation: bhy-fade-up 0.6s cubic-bezier(0.05, 0.7, 0.1, 1) backwards;
 }
-.bhy-slide .bhy-slide-swatch figure:nth-child(1) {
-  animation-delay: 0.14s;
+.bhy-slide--active .bhy-slide-swatch figure:nth-child(1) {
+  animation-delay: 0.18s;
 }
-.bhy-slide .bhy-slide-swatch figure:nth-child(2) {
-  animation-delay: 0.24s;
+.bhy-slide--active .bhy-slide-swatch figure:nth-child(2) {
+  animation-delay: 0.3s;
 }
-.bhy-slide .bhy-slide-swatch figure:nth-child(3) {
-  animation-delay: 0.34s;
+.bhy-slide--active .bhy-slide-swatch figure:nth-child(3) {
+  animation-delay: 0.42s;
 }
 
 /* services */
@@ -669,17 +685,11 @@ html {
 }
 
 /* carousel content staggers in behind the image on every slide change */
-.bhy-slide .bhy-display-3 {
-  animation: bhy-fade-up 0.55s cubic-bezier(0.05, 0.7, 0.1, 1) 0.1s backwards;
+.bhy-slide--active .bhy-display-3 {
+  animation: bhy-fade-up 0.6s cubic-bezier(0.05, 0.7, 0.1, 1) 0.15s backwards;
 }
-.bhy-slide p {
-  animation: bhy-fade-up 0.55s cubic-bezier(0.05, 0.7, 0.1, 1) 0.18s backwards;
-}
-.bhy-slide .bhy-slide-swatch {
-  animation: bhy-fade-up 0.55s cubic-bezier(0.05, 0.7, 0.1, 1) 0.14s backwards;
-}
-.bhy-slide figcaption {
-  animation: bhy-fade-up 0.55s cubic-bezier(0.05, 0.7, 0.1, 1) 0.3s backwards;
+.bhy-slide--active p {
+  animation: bhy-fade-up 0.6s cubic-bezier(0.05, 0.7, 0.1, 1) 0.25s backwards;
 }
 
 /* image hover glaze */

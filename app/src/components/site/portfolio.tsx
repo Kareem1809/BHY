@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { SiteStrings } from "../../lib/i18n";
 import { Arrow } from "./arrow";
@@ -42,6 +42,10 @@ const SLIDE_IMAGES = [
 
 export function Portfolio({ t }: { t: SiteStrings }) {
   const [index, setIndex] = useState(0);
+  // The slide on its way out keeps rendering for the exit animation, so the
+  // stage is never empty for even a frame.
+  const [leaving, setLeaving] = useState<number | null>(null);
+  const leaveTimer = useRef(0);
 
   useEffect(() => {
     // Warm every slide's frames shortly after load — the visible slide's
@@ -60,11 +64,16 @@ export function Portfolio({ t }: { t: SiteStrings }) {
     return () => window.clearTimeout(timer);
   }, []);
   const count = t.portfolio.slides.length;
-  const slide = t.portfolio.slides[index];
-  const images = SLIDE_IMAGES[index];
 
-  const next = () => setIndex((i) => (i + 1) % count);
-  const prev = () => setIndex((i) => (i - 1 + count) % count);
+  const go = (n: number) => {
+    window.clearTimeout(leaveTimer.current);
+    setLeaving(index);
+    setIndex(((n % count) + count) % count);
+    leaveTimer.current = window.setTimeout(() => setLeaving(null), 650);
+  };
+  const next = () => go(index + 1);
+  const prev = () => go(index - 1);
+  useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
 
   return (
     <section id="portfolio" className="bg-[#F5EFE6] py-28 md:py-36">
@@ -77,66 +86,82 @@ export function Portfolio({ t }: { t: SiteStrings }) {
             <Words text={t.portfolio.title} />
           </h2>
         </div>
-        <div
-          key={index}
-          className="bhy-slide mt-16 grid grid-cols-1 gap-10 md:mt-24 md:grid-cols-12 md:gap-12"
-        >
-          <div className="md:col-span-7">
-            <figure className="bhy-slide-img bhy-fig overflow-hidden">
-              <img
-                src={images.hero}
-                alt={slide.title}
-                loading="lazy"
-                decoding="async"
-                className="aspect-[16/10] w-full object-cover"
-              />
-            </figure>
-            <div className="bhy-slide-swatch mt-3 grid grid-cols-3 gap-3">
-              {images.thumbs.map((src) => (
-                <figure key={src} className="bhy-fig overflow-hidden">
-                  <img
-                    src={src}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    className="aspect-[4/5] w-full object-cover"
-                  />
-                </figure>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col md:col-span-5">
-            <div className="flex items-baseline justify-between text-sm text-[#6B5748]">
-              <span>{slide.place}</span>
-              <span dir="ltr" className="tracking-[0.2em]">
-                {String(index + 1).padStart(2, "0")}/{String(count).padStart(2, "0")}
-              </span>
-            </div>
-            <div className="mt-10">
-              <h3 className="bhy-display-3 text-[#3E2E23]">{slide.title}</h3>
-              <p className="mt-6 max-w-[44ch] text-base leading-relaxed text-[#6B5748]">
-                {slide.description}
-              </p>
-            </div>
-            <div className="mt-auto flex items-end justify-end gap-3 pt-12">
-              <button
-                type="button"
-                onClick={prev}
-                aria-label={t.portfolio.prev}
-                className="bhy-carousel-btn"
+        <div className="mt-16 grid md:mt-24">
+          {t.portfolio.slides.map((mapSlide, i) => {
+            const mapImages = SLIDE_IMAGES[i];
+            const state =
+              i === index
+                ? "bhy-slide--active"
+                : i === leaving
+                  ? "bhy-slide--leaving"
+                  : "bhy-slide--idle";
+            return (
+              <div
+                key={mapSlide.title + i}
+                aria-hidden={i !== index}
+                className={`bhy-slide ${state} grid grid-cols-1 gap-10 [grid-area:1/1] md:grid-cols-12 md:gap-12`}
               >
-                <Arrow className="w-5 rotate-180" />
-              </button>
-              <button
-                type="button"
-                onClick={next}
-                aria-label={t.portfolio.next}
-                className="bhy-carousel-btn bhy-carousel-btn-next"
-              >
-                <Arrow className="w-5" />
-              </button>
-            </div>
-          </div>
+                <div className="md:col-span-7">
+                  <figure className="bhy-slide-img bhy-fig overflow-hidden">
+                    <img
+                      src={mapImages.hero}
+                      alt={mapSlide.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="aspect-[16/10] w-full object-cover"
+                    />
+                  </figure>
+                  <div className="bhy-slide-swatch mt-3 grid grid-cols-3 gap-3">
+                    {mapImages.thumbs.map((src) => (
+                      <figure key={src} className="bhy-fig overflow-hidden">
+                        <img
+                          src={src}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="aspect-[4/5] w-full object-cover"
+                        />
+                      </figure>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col md:col-span-5">
+                  <div className="flex items-baseline justify-between text-sm text-[#6B5748]">
+                    <span>{mapSlide.place}</span>
+                    <span dir="ltr" className="tracking-[0.2em]">
+                      {String(i + 1).padStart(2, "0")}/{String(count).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <div className="mt-10">
+                    <h3 className="bhy-display-3 text-[#3E2E23]">{mapSlide.title}</h3>
+                    <p className="mt-6 max-w-[44ch] text-base leading-relaxed text-[#6B5748]">
+                      {mapSlide.description}
+                    </p>
+                  </div>
+                  <div className="mt-auto flex items-end justify-end gap-3 pt-12">
+                    <button
+                      type="button"
+                      onClick={prev}
+                      aria-label={t.portfolio.prev}
+                      tabIndex={i === index ? 0 : -1}
+                      className="bhy-carousel-btn"
+                    >
+                      <Arrow className="w-5 rotate-180" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={next}
+                      aria-label={t.portfolio.next}
+                      tabIndex={i === index ? 0 : -1}
+                      className="bhy-carousel-btn bhy-carousel-btn-next"
+                    >
+                      <Arrow className="w-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
