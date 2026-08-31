@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { SiteStrings } from "../../lib/i18n";
 import { Arrow } from "./arrow";
@@ -42,6 +42,23 @@ const SLIDE_IMAGES = [
 
 export function Portfolio({ t }: { t: SiteStrings }) {
   const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    // Warm every slide's frames shortly after load — the visible slide's
+    // images arrive on their own, but the other projects' used to start
+    // downloading only on click, which showed as a beat of blank. Once
+    // warmed, switching serves straight from cache.
+    const timer = window.setTimeout(() => {
+      for (const slideImages of SLIDE_IMAGES) {
+        for (const src of [slideImages.hero, ...slideImages.thumbs]) {
+          const img = new Image();
+          img.decoding = "async";
+          img.src = src;
+        }
+      }
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, []);
   const count = t.portfolio.slides.length;
   const slide = t.portfolio.slides[index];
   const images = SLIDE_IMAGES[index];
