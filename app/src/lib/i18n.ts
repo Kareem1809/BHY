@@ -48,11 +48,10 @@ export type SiteStrings = {
 
 // One definition per destination — the language blocks below only carry labels,
 // so a URL can never drift between Hebrew and Arabic.
-const INSTAGRAM_URL = "https://www.instagram.com/basma.hajyahia.design";
+const INSTAGRAM_URL = "https://www.instagram.com/bhy__design";
 const EMAIL_ADDRESS = "basmahaj99@gmail.com";
 // 054-822-0962 in international form: wa.me refuses the leading zero and wants
 // the country code with no plus or dashes.
-const WHATSAPP_NUMBER = "054-822-0962";
 const WHATSAPP_URL = "https://wa.me/972548220962";
 
 export const STRINGS: Record<Lang, SiteStrings> = {
@@ -143,7 +142,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       follow: "עקבו אחרינו",
       socials: [
         { label: "אינסטגרם", href: INSTAGRAM_URL },
-        { label: `וואטסאפ ${WHATSAPP_NUMBER}`, href: WHATSAPP_URL },
+        { label: "וואטסאפ", href: WHATSAPP_URL },
         { label: EMAIL_ADDRESS, href: `mailto:${EMAIL_ADDRESS}` },
       ],
       rights: "© 2026 בסמה חאג' יחיא. כל הזכויות שמורות.",
@@ -236,7 +235,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       follow: "تابعونا",
       socials: [
         { label: "إنستغرام", href: INSTAGRAM_URL },
-        { label: `واتساب ${WHATSAPP_NUMBER}`, href: WHATSAPP_URL },
+        { label: "واتساب", href: WHATSAPP_URL },
         { label: EMAIL_ADDRESS, href: `mailto:${EMAIL_ADDRESS}` },
       ],
       rights: "© 2026 بسمة حاج يحيى. جميع الحقوق محفوظة.",
