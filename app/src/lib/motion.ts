@@ -36,6 +36,13 @@ export function useSiteMotion(deps: readonly unknown[]) {
         const ScrollTrigger = scrollTriggerModule.ScrollTrigger;
         const Lenis = lenisModule.default;
         gsap.registerPlugin(ScrollTrigger);
+        // Phone browsers collapse and restore their URL bar while scrolling,
+        // which fires a resize mid-scroll; a full ScrollTrigger refresh at
+        // that moment recomputes every trigger against the new viewport and
+        // shifted the About reveals past their range — they then sat frozen
+        // on their final frame. This tells ScrollTrigger to ignore exactly
+        // that resize (GSAP's documented fix for it).
+        ScrollTrigger.config({ ignoreMobileResize: true });
 
         const lenis = new Lenis({
           autoRaf: false,
