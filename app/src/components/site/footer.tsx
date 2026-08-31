@@ -14,13 +14,15 @@ export function Footer({ t }: { t: SiteStrings }) {
           navbar's own inset, the columns riding beside it on the left. Keeping
           them on one row is what stops the text from dropping below the logo. */}
       <div className="grid w-full grid-cols-1 gap-12 px-5 py-16 md:grid-cols-3 md:items-start md:px-8 md:py-20">
+        {/* A dedicated print of the lockup for the ivory band: denser strokes
+            and a deeper bronze, baked into the file — no runtime filters. */}
         <img
           data-drift="24"
-          src="/assets/logo.png"
+          src="/assets/footer-logo.png"
           alt="Basma Haj Yahia, architecture & interior design"
           loading="lazy"
-                      decoding="async"
-          className="w-72 max-w-full shrink-0 md:justify-self-start md:w-[30rem]"
+          decoding="async"
+          className="w-80 max-w-full shrink-0 md:w-[34rem] md:justify-self-start"
         />
         <div className="flex flex-col gap-12 sm:flex-row sm:gap-16 md:justify-self-center md:gap-24">
           <div data-drift="48">
