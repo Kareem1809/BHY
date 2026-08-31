@@ -47,8 +47,80 @@ export function useSiteMotion(deps: readonly unknown[]) {
         gsap.ticker.add(tick);
         gsap.ticker.lagSmoothing(0);
 
+        // Verification hatch, localhost only: headless checks can pump
+        // gsap.ticker.tick() by hand when the preview pane is hidden and
+        // the browser freezes requestAnimationFrame. Inert in production.
+        if (window.location.hostname === "localhost") {
+          (window as unknown as Record<string, unknown>).__bhyMotion = { gsap, ScrollTrigger, lenis };
+        }
+
         const ctx = gsap.context(() => {
           const hero = document.querySelector("[data-hero]");
+
+          // Scroll-driven film: the hero pins for ~2.5 screens and scroll
+          // progress becomes the playhead — the film never runs on its own,
+          // scrolling down advances it, scrolling up rewinds it. scrub: 0.6
+          // keeps the playhead easing gently behind the scrollbar (the same
+          // lagged feel as the rest of the site) instead of snapping.
+          const film = document.querySelector<HTMLVideoElement>("[data-hero-film]");
+          if (hero && film) {
+            // 4K only where the glass can show it (retina laptop and up);
+            // phones get the FHD cut and save ~22MB. (Attribute is src-uhd,
+            // not src-4k: a digit after the hyphen never camelCases into
+            // dataset, so dataset.src4k would read undefined.)
+            const density = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
+            film.src = (density >= 2000 ? film.dataset.srcUhd : film.dataset.srcFhd) ?? "";
+            film.load();
+
+            let filmLength = 0;
+            film.addEventListener(
+              "loadedmetadata",
+              () => {
+                filmLength = film.duration;
+                // A muted inline play/pause forces the decoder awake so the
+                // first scrub already has frames (iOS won't decode otherwise).
+                film.play().then(() => film.pause()).catch(() => {});
+                ScrollTrigger.refresh();
+              },
+              { once: true },
+            );
+
+            const playhead = { p: 0 };
+            gsap
+              .timeline({
+                scrollTrigger: {
+                  trigger: hero,
+                  start: "top top",
+                  end: "+=250%",
+                  pin: true,
+                  // M3 motion: the scroll→playhead mapping itself stays linear;
+                  // easing lives only in this short catch-up lag (~300ms) so the
+                  // film feels tied to the finger, responsive rather than floaty.
+                  scrub: 0.3,
+                  anticipatePin: 1,
+                },
+              })
+              .to(
+                playhead,
+                {
+                  p: 1,
+                  ease: "none",
+                  duration: 1,
+                  onUpdate: () => {
+                    if (!filmLength) return;
+                    // stop one frame short: seeking to the exact end flashes black
+                    film.currentTime = Math.min(playhead.p * filmLength, filmLength - 1 / 24);
+                  },
+                },
+                0,
+              )
+              // The headline said its piece — it bows out over the first
+              // quarter so the film takes the room (exit fade, not a reveal).
+              .to("[data-hero-copy]", { opacity: 0, y: -64, ease: "none", duration: 0.25 }, 0)
+              // ...and the legibility veil thins out with it.
+              .to("[data-hero-veil]", { opacity: 0.4, ease: "none", duration: 0.3 }, 0);
+          }
+
           if (nav && hero) {
             ScrollTrigger.create({
               trigger: hero,

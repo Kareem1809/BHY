@@ -229,15 +229,24 @@ html {
   inset-inline: 0;
   z-index: 50;
   color: #f5efe6;
-  animation: bhy-nav-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards;
+  animation: bhy-nav-in 0.5s cubic-bezier(0.05, 0.7, 0.1, 1) 0.1s backwards;
+  /* M3 treats the bar as utility chrome: returning it rides
+     standard-decelerate at 250ms... */
   transition:
     background-color 0.35s ease,
     color 0.35s ease,
     box-shadow 0.35s ease,
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.25s cubic-bezier(0, 0, 0, 1);
 }
 .bhy-nav-hidden {
   transform: translateY(-100%);
+  /* ...while tucking it away is an exit: standard-accelerate, and
+     shorter (200ms) because departures need less of the eye. */
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    box-shadow 0.35s ease,
+    transform 0.2s cubic-bezier(0.3, 0, 1, 1);
 }
 @keyframes bhy-nav-in {
   from {
@@ -290,19 +299,23 @@ html {
   opacity: 1;
 }
 
-/* hero entrance: runs once on load and ends fully visible */
+/* hero entrance: runs once on load and ends fully visible.
+   Timing follows Material 3 motion tokens — entrances ride the
+   emphasized-decelerate curve cubic-bezier(0.05, 0.7, 0.1, 1)
+   (snappy takeoff, soft landing), durations from the long set
+   (450-500ms) for these full-screen moments, ~80ms line stagger. */
 .bhy-hero-img {
-  animation: bhy-hero-zoom 2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: bhy-hero-zoom 1s cubic-bezier(0.05, 0.7, 0.1, 1) both;
 }
 .bhy-hero-line {
-  animation: bhy-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 0.15s;
+  animation: bhy-rise 0.5s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+  animation-delay: 0.1s;
 }
 .bhy-hero-line-2 {
-  animation-delay: 0.32s;
+  animation-delay: 0.18s;
 }
 .bhy-hero-line-3 {
-  animation-delay: 0.5s;
+  animation-delay: 0.26s;
 }
 @keyframes bhy-hero-zoom {
   from {
@@ -589,10 +602,10 @@ html {
 }
 
 .bhy-hero-fade {
-  animation: bhy-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.7s backwards;
+  animation: bhy-fade-up 0.45s cubic-bezier(0.05, 0.7, 0.1, 1) 0.4s backwards;
 }
 .bhy-hero-fade-2 {
-  animation-delay: 0.85s;
+  animation-delay: 0.5s;
 }
 @keyframes bhy-fade-up {
   from {
