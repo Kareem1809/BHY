@@ -59,150 +59,100 @@ export function useSiteMotion(deps: readonly unknown[]) {
         const ctx = gsap.context(() => {
           const hero = document.querySelector("[data-hero]");
 
-          // Scroll-driven film: the hero pins for ~2.5 screens and scroll
-          // progress becomes the playhead — the film never runs on its own,
-          // scrolling down advances it, scrolling up rewinds it. The film is a
-          // WebP still sequence painted onto a canvas: video-element scrubbing
-          // stuttered (every currentTime write pays a 4K decode), while
-          // drawImage of a ready frame is near-free, so this stays smooth.
-          const filmCanvas = document.querySelector<HTMLCanvasElement>("[data-hero-canvas]");
-          const paint2d = filmCanvas?.getContext("2d");
-          if (hero && filmCanvas && paint2d) {
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            const density = window.innerWidth * dpr;
-            const uhd = density >= 2000;
-            // Two prints of the same film. Scrub paints only the light
-            // "motion" print — a 2880px still costs 20-40ms to decode and
-            // that is exactly what read as stutter — while the full-res
-            // print is laid over it the moment the scroll comes to rest,
-            // so standing frames stay razor sharp.
-            const motionBase = uhd ? filmCanvas.dataset.motionUhd : filmCanvas.dataset.motionFhd;
-            const sharpBase = uhd ? filmCanvas.dataset.seqUhd : filmCanvas.dataset.seqFhd;
-            const FRAMES = Number(filmCanvas.dataset.frames) || 241;
-            const frameUrl = (i: number) => `${motionBase}/${String(i).padStart(3, "0")}.webp`;
+          // Scroll-driven film, the proven Higgsfield mechanism: the hero pins
+          // and every ticker frame the video's currentTime glides a fraction
+          // of the way toward where the scroll points. Nothing ever plays on
+          // its own; scrolling down advances the film, scrolling up rewinds
+          // it. 1080p with a keyframe every 4 frames keeps each seek cheap —
+          // the still-sequence experiments stuttered on laptop-class decode,
+          // this glide does not. When the scroll rests, the razor-sharp
+          // 2880px still of that exact frame fades in over the video.
+          const film = document.querySelector<HTMLVideoElement>("[data-hero-film]");
+          const sharpImg = document.querySelector<HTMLImageElement>("[data-hero-sharp]");
+          if (hero && film) {
+            const density = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
+            const big = density >= 2000;
+            const clipUrl = (big ? film.dataset.srcHd : film.dataset.srcSm) ?? "";
+            const sharpBase = big ? film.dataset.sharpUhd : film.dataset.sharpFhd;
+            const SHARP_FRAMES = Number(film.dataset.frames) || 241;
 
-            const frames: (HTMLImageElement | undefined)[] = new Array(FRAMES);
-            const ready = new Uint8Array(FRAMES);
-            const sharp: (HTMLImageElement | undefined)[] = new Array(FRAMES);
-            let shownPos = -1; // fractional frame currently painted
-            let targetPos = 0; // fractional frame the scrub wants
-            let settleTimer = 0;
-            let lastWarm = -1;
+            let filmLength = 0;
+            let clipObjectUrl = "";
+            film.addEventListener(
+              "loadedmetadata",
+              () => {
+                filmLength = film.duration;
+                // muted inline play/pause wakes the decoder (iOS needs it)
+                film.play().then(() => film.pause()).catch(() => {});
+                ScrollTrigger.refresh();
+              },
+              { once: true },
+            );
+            // The Higgsfield engine's core trick: pull the whole clip into
+            // memory first and play it from a blob — a seek against a blob
+            // never touches the network, which is where streamed scrubbing
+            // stutters. Until it lands, the poster holds the frame.
+            fetch(clipUrl)
+              .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+              .then((blob) => {
+                clipObjectUrl = URL.createObjectURL(blob);
+                film.src = clipObjectUrl;
+                film.load();
+              })
+              .catch(() => {
+                // fall back to streaming rather than showing nothing
+                film.src = clipUrl;
+                film.load();
+              });
 
-            const sizeCanvas = () => {
-              filmCanvas.width = Math.round(filmCanvas.clientWidth * dpr);
-              filmCanvas.height = Math.round(filmCanvas.clientHeight * dpr);
-              // setting width resets context state — re-ask for crisp scaling
-              paint2d.imageSmoothingEnabled = true;
-              paint2d.imageSmoothingQuality = "high";
-              shownPos = -1; // force a repaint at the new size
-              paintNearest();
-            };
-
-            // cover-crop, same fit the old <video object-cover> had
-            const drawCover = (img: HTMLImageElement, alpha: number) => {
-              const cw = filmCanvas.width;
-              const ch = filmCanvas.height;
-              const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
-              const dw = img.naturalWidth * scale;
-              const dh = img.naturalHeight * scale;
-              paint2d.globalAlpha = alpha;
-              paint2d.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
-              paint2d.globalAlpha = 1;
-            };
-
-            // Sub-frame smoothness: the playhead lands between two stills, so
-            // paint the earlier one and lay the next over it at fractional
-            // opacity — motion stays fluid even at a crawl, no stepping.
-            const paintBlend = () => {
-              const lo = Math.floor(targetPos);
-              const hi = Math.min(lo + 1, FRAMES - 1);
-              if (!ready[lo] || (hi !== lo && !ready[hi])) return false;
-              const mix = targetPos - lo;
-              drawCover(frames[lo]!, 1);
-              if (hi !== lo && mix > 0.02) drawCover(frames[hi]!, mix);
-              shownPos = targetPos;
-              return true;
-            };
-
-            // While the sequence streams in, show the closest frame that has
-            // arrived — the film starts coarse and sharpens into place.
-            const paintNearest = () => {
-              if (shownPos === -1 && targetPos <= 0.02) return; // poster shows, already full-res
-              if (paintBlend()) return;
-              const t = Math.round(targetPos);
-              for (let d = 0; d < FRAMES; d++) {
-                const lo = t - d;
-                const hi = t + d;
-                if (lo >= 0 && ready[lo]) { drawCover(frames[lo]!, 1); shownPos = lo; return; }
-                if (hi < FRAMES && ready[hi]) { drawCover(frames[hi]!, 1); shownPos = hi; return; }
+            // The chase, verbatim from the Higgsfield engine: glide a fifth
+            // of the way toward the target each frame, skip while a seek is
+            // in flight, and only write currentTime past a small epsilon —
+            // piled-up seeks are exactly what reads as stutter.
+            let currentFrac = 0;
+            let targetFrac = 0;
+            const epsilon = big ? 0.008 : 0.02;
+            const chase = () => {
+              if (!filmLength || film.seeking) return;
+              currentFrac += (targetFrac - currentFrac) * 0.2;
+              const t = Math.min(Math.max(currentFrac, 0), 0.999) * filmLength;
+              if (Math.abs(film.currentTime - t) > epsilon) {
+                try {
+                  film.currentTime = t;
+                } catch {
+                  // keep the last painted frame while the browser catches up
+                }
               }
             };
+            gsap.ticker.add(chase);
 
-            const loadFrame = (i: number) => {
-              if (frames[i]) return;
-              const img = new Image();
-              img.decoding = "async";
-              img.onload = () => {
-                ready[i] = 1;
-                // pre-decode off the main thread so first paint doesn't jank
-                img.decode?.().catch(() => {});
-                if (Math.abs(targetPos - shownPos) > 0.02) paintNearest();
-              };
-              img.src = frameUrl(i);
-              frames[i] = img;
+            let settleTimer = 0;
+            const hideSharp = () => {
+              if (sharpImg) sharpImg.style.opacity = "0";
             };
-
-            // Once the scroll rests for a beat, print the full-res still of
-            // the frame we stopped on. Loads on demand; if the visitor moves
-            // on before it arrives, the paint guard just drops it.
             const settle = () => {
-              const i = Math.round(targetPos);
-              const finish = (img: HTMLImageElement) => {
-                const p = img.decode ? img.decode().catch(() => {}) : Promise.resolve();
-                p.then(() => {
-                  if (Math.abs(targetPos - i) < 0.6) drawCover(img, 1);
+              if (!sharpImg || !filmLength || !sharpBase) return;
+              const i = Math.round(targetFrac * (SHARP_FRAMES - 1));
+              const want = `${sharpBase}/${String(i).padStart(3, "0")}.webp`;
+              const show = () => {
+                const decoded = sharpImg.decode ? sharpImg.decode().catch(() => {}) : Promise.resolve();
+                decoded.then(() => {
+                  // only if the visitor is still resting on this very frame
+                  const j = Math.round(targetFrac * (SHARP_FRAMES - 1));
+                  if (j === i) sharpImg.style.opacity = "1";
                 });
               };
-              const have = sharp[i];
-              if (have) {
-                if (have.complete && have.naturalWidth) finish(have);
-                return;
-              }
-              const img = new Image();
-              img.decoding = "async";
-              img.onload = () => finish(img);
-              img.src = `${sharpBase}/${String(i).padStart(3, "0")}.webp`;
-              sharp[i] = img;
-            };
-
-            // Keep the decode cache warm a few frames ahead of the direction
-            // of travel so motion paints never decode on the main thread.
-            const warmAhead = (dir: number) => {
-              const t = Math.round(targetPos);
-              if (t === lastWarm) return;
-              lastWarm = t;
-              for (const d of [1, 2, 4, 6]) {
-                const j = t + d * dir;
-                if (j < 0 || j >= FRAMES) continue;
-                if (!frames[j]) loadFrame(j);
-                else if (ready[j]) frames[j]!.decode?.().catch(() => {});
+              if (sharpImg.src.endsWith(want)) show();
+              else {
+                sharpImg.onload = show;
+                sharpImg.src = want;
               }
             };
 
-            // Two-wave load: every 8th frame first so scrubbing works within
-            // the first second, then the gaps fill in and it turns buttery.
-            for (let i = 0; i < FRAMES; i += 8) loadFrame(i);
-            const fillTimer = window.setTimeout(() => {
-              for (let i = 0; i < FRAMES; i++) loadFrame(i);
-            }, 900);
-
-            sizeCanvas();
-            window.addEventListener("resize", sizeCanvas);
             filmCleanup = () => {
-              window.clearTimeout(fillTimer);
+              gsap.ticker.remove(chase);
               window.clearTimeout(settleTimer);
-              window.removeEventListener("resize", sizeCanvas);
+              if (clipObjectUrl) URL.revokeObjectURL(clipObjectUrl);
             };
 
             const playhead = { p: 0 };
@@ -211,15 +161,11 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 scrollTrigger: {
                   trigger: hero,
                   start: "top top",
-                  // 185% instead of 250%: the film plays through quicker per
-                  // scroll, and with 241 frames each step lands ~7px apart —
-                  // dense enough that motion reads continuous, not stepped.
                   end: "+=185%",
                   pin: true,
-                  // M3 motion: the scroll→playhead mapping itself stays linear;
-                  // easing lives only in this short catch-up lag (~250ms) so the
-                  // film feels tied to the finger, responsive rather than floaty.
-                  scrub: 0.25,
+                  // scrub feeds the target directly; the chase above is the
+                  // only smoothing layer, exactly like the Higgsfield engine
+                  scrub: true,
                   anticipatePin: 1,
                 },
               })
@@ -230,14 +176,10 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   ease: "none",
                   duration: 1,
                   onUpdate: () => {
-                    const prev = targetPos;
-                    targetPos = playhead.p * (FRAMES - 1);
-                    if (Math.abs(targetPos - shownPos) > 0.02) {
-                      paintNearest();
-                      warmAhead(targetPos >= prev ? 1 : -1);
-                      window.clearTimeout(settleTimer);
-                      settleTimer = window.setTimeout(settle, 150);
-                    }
+                    targetFrac = playhead.p;
+                    hideSharp();
+                    window.clearTimeout(settleTimer);
+                    settleTimer = window.setTimeout(settle, 160);
                   },
                 },
                 0,
