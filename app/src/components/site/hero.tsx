@@ -39,6 +39,14 @@ export function Hero({ t }: { t: SiteStrings }) {
         aria-hidden="true"
         className="absolute inset-0 bg-gradient-to-t from-[#190f09]/85 via-[#2A1E16]/40 to-[#2A1E16]/25"
       />
+      {/* The film is bright cream all the way through, and the ivory logo has
+          to hold the corner for its whole length — this top scrim is what
+          keeps the bar legible. It never fades with the veil, for that same
+          reason, and it dies out well above the headline. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[#190f09]/85 via-[#190f09]/45 to-transparent md:h-72"
+      />
       <div
         data-hero-copy
         className="relative z-10 mx-auto w-full max-w-[1280px] px-6 pb-16 pt-44 md:pb-24"

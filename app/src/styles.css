@@ -219,7 +219,19 @@ html {
 .bhy-logo {
   height: 100%;
   width: auto;
+  /* Two shadows, not one: the tight dark halo separates the thin strokes from
+     a bright frame, the wide one seats the mark on the film. Dropped once the
+     bar goes solid, where the scrim no longer exists. */
+  filter: brightness(1.22) contrast(1.04) drop-shadow(0 1px 3px rgba(10, 6, 3, 0.85))
+    drop-shadow(0 3px 18px rgba(10, 6, 3, 0.6));
+}
+.bhy-nav-solid .bhy-logo {
   filter: brightness(1.22) contrast(1.04) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.5));
+}
+/* Same treatment for the words riding the film. */
+.bhy-nav:not(.bhy-nav-solid) .bhy-nav-link,
+.bhy-nav:not(.bhy-nav-solid) .bhy-lang {
+  text-shadow: 0 1px 3px rgba(10, 6, 3, 0.8);
 }
 
 /* nav */

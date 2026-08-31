@@ -144,12 +144,16 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 },
                 0,
               )
-              // The headline said its piece — it bows out over the first
-              // quarter so the film takes the room (exit fade, not a reveal).
-              .to("[data-hero-copy]", { opacity: 0, y: -64, ease: "none", duration: 0.25 }, 0)
-              // ...and the legibility veil thins right out so the film reads
-              // clean and bright once the text is gone.
-              .to("[data-hero-veil]", { opacity: 0.3, ease: "none", duration: 0.3 }, 0);
+              // The headline holds for the first third of the film, then
+              // leaves slowly (over another 40%) rather than snapping away.
+              .to(
+                "[data-hero-copy]",
+                { opacity: 0, y: -40, ease: "power1.in", duration: 0.4 },
+                0.32,
+              )
+              // ...and the legibility veil thins out on the same schedule, so
+              // the film reads clean and bright once the text is gone.
+              .to("[data-hero-veil]", { opacity: 0.3, ease: "none", duration: 0.4 }, 0.32);
           }
 
           if (nav && hero) {
@@ -160,12 +164,13 @@ export function useSiteMotion(deps: readonly unknown[]) {
               onLeaveBack: () => nav.classList.remove("bhy-nav-solid"),
             });
             // Tuck the nav away while scrolling down, bring it back on the
-            // first upward movement.
+            // first upward movement — but never during the film: the logo is
+            // meant to hold the corner for the whole hero.
             ScrollTrigger.create({
               start: 0,
               end: "max",
               onUpdate: (self) => {
-                const pastHero = self.scroll() > window.innerHeight * 0.6;
+                const pastHero = self.scroll() > (hero as HTMLElement).offsetHeight;
                 nav.classList.toggle("bhy-nav-hidden", pastHero && self.direction === 1);
               },
             });
