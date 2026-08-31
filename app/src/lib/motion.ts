@@ -119,39 +119,17 @@ export function useSiteMotion(deps: readonly unknown[]) {
               if (blobUrl) URL.revokeObjectURL(blobUrl);
             };
 
-            // The clip is trimmed past its crawling first 1.2s, and this
-            // table (measured from the trimmed clip's frame-to-frame motion,
-            // weighted ^1.5) remaps scroll progress so the content moves at a
-            // constant perceived speed — mostly evening out the slow tail.
-            const FILM_PACE = [
-              0, 0.0145, 0.0279, 0.0408, 0.0524, 0.0641, 0.0753, 0.0868,
-              0.0984, 0.1103, 0.1227, 0.1347, 0.1481, 0.1607, 0.1725, 0.1841,
-              0.195, 0.2057, 0.2168, 0.2282, 0.2394, 0.2504, 0.2613, 0.2724,
-              0.2833, 0.2942, 0.3048, 0.3153, 0.3259, 0.3367, 0.3476, 0.3578,
-              0.3682, 0.3788, 0.3892, 0.3994, 0.4101, 0.4213, 0.4319, 0.4435,
-              0.4555, 0.4675, 0.48, 0.4922, 0.5037, 0.5147, 0.5257, 0.5367,
-              0.5475, 0.5586, 0.5699, 0.5814, 0.5934, 0.6066, 0.62, 0.6335,
-              0.6477, 0.6625, 0.6791, 0.698, 0.7207, 0.7487, 0.7921, 0.8673,
-              1,
-            ];
-            const paced = (progress: number) => {
-              const x = Math.min(Math.max(progress, 0), 1) * (FILM_PACE.length - 1);
-              const i = Math.floor(x);
-              const a = FILM_PACE[i];
-              const b = FILM_PACE[Math.min(i + 1, FILM_PACE.length - 1)];
-              return a + (b - a) * (x - i);
-            };
-
             const playhead = { p: 0 };
             gsap
               .timeline({
                 scrollTrigger: {
+                  // The section is 260svh tall and its stage is CSS-sticky, so
+                  // scrolling its own height is the scrub track — no pin, no
+                  // fixed positioning, nothing laid over the next section.
                   trigger: hero,
                   start: "top top",
-                  end: "+=185%",
-                  pin: true,
+                  end: "bottom bottom",
                   scrub: true,
-                  anticipatePin: 1,
                 },
               })
               .to(
@@ -161,7 +139,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   ease: "none",
                   duration: 1,
                   onUpdate: () => {
-                    targetFrac = paced(playhead.p);
+                    targetFrac = playhead.p;
                   },
                 },
                 0,

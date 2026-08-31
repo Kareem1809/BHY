@@ -3,11 +3,14 @@ import { Arrow } from "./arrow";
 
 export function Hero({ t }: { t: SiteStrings }) {
   return (
-    <section
-      data-hero
-      id="top"
-      className="relative flex min-h-dvh flex-col justify-end overflow-hidden bg-[#2A1E16]"
-    >
+    <section data-hero id="top" className="relative h-[260svh] bg-[#2A1E16]">
+      {/* The section owns its full height and the stage sticks inside it —
+          plain CSS sticky, no pinning and no fixed positioning, so nothing is
+          ever laid over the section that follows. */}
+      <div
+        data-hero-stage
+        className="sticky top-0 flex h-[100svh] flex-col justify-end overflow-hidden"
+      >
       {/* The film never plays on its own — scroll is the playhead (the
           Higgsfield chase: the clip loads fully into memory, then currentTime
           glides toward where the scroll points). The poster holds the opening
@@ -59,6 +62,7 @@ export function Hero({ t }: { t: SiteStrings }) {
             <span>{t.hero.cta}</span>
             <Arrow className="bhy-cta-underline-arrow w-6" />
           </a>
+        </div>
         </div>
       </div>
     </section>
