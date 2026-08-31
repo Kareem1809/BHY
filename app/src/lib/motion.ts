@@ -119,21 +119,20 @@ export function useSiteMotion(deps: readonly unknown[]) {
               if (blobUrl) URL.revokeObjectURL(blobUrl);
             };
 
-            // The clip's camera eases in and out (measured with ffmpeg
-            // signalstats: the opening moves ~2.5x slower than the middle),
-            // which a linear scrub reads as "stuck at first, then racing" —
-            // it was never decode or network. This table, computed from the
-            // clip's own frame-to-frame motion, remaps scroll progress so the
-            // content moves at a constant perceived speed.
+            // The clip is trimmed past its crawling first 1.2s, and this
+            // table (measured from the trimmed clip's frame-to-frame motion,
+            // weighted ^1.5) remaps scroll progress so the content moves at a
+            // constant perceived speed — mostly evening out the slow tail.
             const FILM_PACE = [
-              0, 0.041, 0.0671, 0.0872, 0.104, 0.1191, 0.133, 0.1461, 0.1588,
-              0.1706, 0.1822, 0.1939, 0.2057, 0.2174, 0.2296, 0.2419, 0.2547,
-              0.267, 0.2786, 0.2901, 0.3011, 0.3122, 0.3236, 0.3349, 0.3462,
-              0.3576, 0.3687, 0.3799, 0.3909, 0.4018, 0.4129, 0.4241, 0.4349,
-              0.4458, 0.4568, 0.4675, 0.4784, 0.4898, 0.5009, 0.5126, 0.5248,
-              0.5366, 0.5489, 0.5608, 0.5721, 0.5834, 0.5947, 0.6058, 0.6172,
-              0.6287, 0.6405, 0.653, 0.6659, 0.6789, 0.6922, 0.7061, 0.7211,
-              0.7375, 0.7557, 0.7763, 0.802, 0.8347, 0.8778, 0.9371, 1,
+              0, 0.0145, 0.0279, 0.0408, 0.0524, 0.0641, 0.0753, 0.0868,
+              0.0984, 0.1103, 0.1227, 0.1347, 0.1481, 0.1607, 0.1725, 0.1841,
+              0.195, 0.2057, 0.2168, 0.2282, 0.2394, 0.2504, 0.2613, 0.2724,
+              0.2833, 0.2942, 0.3048, 0.3153, 0.3259, 0.3367, 0.3476, 0.3578,
+              0.3682, 0.3788, 0.3892, 0.3994, 0.4101, 0.4213, 0.4319, 0.4435,
+              0.4555, 0.4675, 0.48, 0.4922, 0.5037, 0.5147, 0.5257, 0.5367,
+              0.5475, 0.5586, 0.5699, 0.5814, 0.5934, 0.6066, 0.62, 0.6335,
+              0.6477, 0.6625, 0.6791, 0.698, 0.7207, 0.7487, 0.7921, 0.8673,
+              1,
             ];
             const paced = (progress: number) => {
               const x = Math.min(Math.max(progress, 0), 1) * (FILM_PACE.length - 1);
