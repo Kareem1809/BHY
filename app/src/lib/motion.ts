@@ -73,42 +73,60 @@ export function useSiteMotion(deps: readonly unknown[]) {
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             const density = window.innerWidth * dpr;
             const seqBase = density >= 2000 ? filmCanvas.dataset.seqUhd : filmCanvas.dataset.seqFhd;
-            const FRAMES = Number(filmCanvas.dataset.frames) || 121;
+            const FRAMES = Number(filmCanvas.dataset.frames) || 241;
             const frameUrl = (i: number) => `${seqBase}/${String(i).padStart(3, "0")}.webp`;
 
             const frames: (HTMLImageElement | undefined)[] = new Array(FRAMES);
             const ready = new Uint8Array(FRAMES);
-            let shownFrame = -1;
-            let targetFrame = 0;
+            let shownPos = -1; // fractional frame currently painted
+            let targetPos = 0; // fractional frame the scrub wants
 
             const sizeCanvas = () => {
               filmCanvas.width = Math.round(filmCanvas.clientWidth * dpr);
               filmCanvas.height = Math.round(filmCanvas.clientHeight * dpr);
-              shownFrame = -1; // force a repaint at the new size
+              // setting width resets context state — re-ask for crisp scaling
+              paint2d.imageSmoothingEnabled = true;
+              paint2d.imageSmoothingQuality = "high";
+              shownPos = -1; // force a repaint at the new size
               paintNearest();
             };
 
             // cover-crop, same fit the old <video object-cover> had
-            const paintFrame = (i: number) => {
-              const img = frames[i];
-              if (!img || !ready[i]) return;
+            const drawCover = (img: HTMLImageElement, alpha: number) => {
               const cw = filmCanvas.width;
               const ch = filmCanvas.height;
               const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
               const dw = img.naturalWidth * scale;
               const dh = img.naturalHeight * scale;
+              paint2d.globalAlpha = alpha;
               paint2d.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
-              shownFrame = i;
+              paint2d.globalAlpha = 1;
+            };
+
+            // Sub-frame smoothness: the playhead lands between two stills, so
+            // paint the earlier one and lay the next over it at fractional
+            // opacity — motion stays fluid even at a crawl, no stepping.
+            const paintBlend = () => {
+              const lo = Math.floor(targetPos);
+              const hi = Math.min(lo + 1, FRAMES - 1);
+              if (!ready[lo] || (hi !== lo && !ready[hi])) return false;
+              const mix = targetPos - lo;
+              drawCover(frames[lo]!, 1);
+              if (hi !== lo && mix > 0.02) drawCover(frames[hi]!, mix);
+              shownPos = targetPos;
+              return true;
             };
 
             // While the sequence streams in, show the closest frame that has
             // arrived — the film starts coarse and sharpens into place.
             const paintNearest = () => {
+              if (paintBlend()) return;
+              const t = Math.round(targetPos);
               for (let d = 0; d < FRAMES; d++) {
-                const lo = targetFrame - d;
-                const hi = targetFrame + d;
-                if (lo >= 0 && ready[lo]) return paintFrame(lo);
-                if (hi < FRAMES && ready[hi]) return paintFrame(hi);
+                const lo = t - d;
+                const hi = t + d;
+                if (lo >= 0 && ready[lo]) { drawCover(frames[lo]!, 1); shownPos = lo; return; }
+                if (hi < FRAMES && ready[hi]) { drawCover(frames[hi]!, 1); shownPos = hi; return; }
               }
             };
 
@@ -120,15 +138,15 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 ready[i] = 1;
                 // pre-decode off the main thread so first paint doesn't jank
                 img.decode?.().catch(() => {});
-                if (shownFrame !== targetFrame) paintNearest();
+                if (Math.abs(targetPos - shownPos) > 0.02) paintNearest();
               };
               img.src = frameUrl(i);
               frames[i] = img;
             };
 
-            // Two-wave load: every 6th frame first so scrubbing works within
+            // Two-wave load: every 8th frame first so scrubbing works within
             // the first second, then the gaps fill in and it turns buttery.
-            for (let i = 0; i < FRAMES; i += 6) loadFrame(i);
+            for (let i = 0; i < FRAMES; i += 8) loadFrame(i);
             const fillTimer = window.setTimeout(() => {
               for (let i = 0; i < FRAMES; i++) loadFrame(i);
             }, 900);
@@ -146,12 +164,15 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 scrollTrigger: {
                   trigger: hero,
                   start: "top top",
-                  end: "+=250%",
+                  // 185% instead of 250%: the film plays through quicker per
+                  // scroll, and with 241 frames each step lands ~7px apart —
+                  // dense enough that motion reads continuous, not stepped.
+                  end: "+=185%",
                   pin: true,
                   // M3 motion: the scroll→playhead mapping itself stays linear;
-                  // easing lives only in this short catch-up lag (~300ms) so the
+                  // easing lives only in this short catch-up lag (~250ms) so the
                   // film feels tied to the finger, responsive rather than floaty.
-                  scrub: 0.3,
+                  scrub: 0.25,
                   anticipatePin: 1,
                 },
               })
@@ -162,8 +183,8 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   ease: "none",
                   duration: 1,
                   onUpdate: () => {
-                    targetFrame = Math.round(playhead.p * (FRAMES - 1));
-                    if (targetFrame !== shownFrame) paintNearest();
+                    targetPos = playhead.p * (FRAMES - 1);
+                    if (Math.abs(targetPos - shownPos) > 0.02) paintNearest();
                   },
                 },
                 0,

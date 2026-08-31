@@ -25,7 +25,7 @@ export function Hero({ t }: { t: SiteStrings }) {
           data-hero-canvas
           data-seq-uhd="/assets/hero-seq/uhd"
           data-seq-fhd="/assets/hero-seq/fhd"
-          data-frames="121"
+          data-frames="241"
           className="absolute inset-0 h-full w-full"
         />
       </div>
