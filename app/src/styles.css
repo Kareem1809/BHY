@@ -196,69 +196,24 @@ html {
   white-space: nowrap;
 }
 
-/* The full logo lockup (mark + script name + tagline) fills the whole height of
-   the navbar — the bar IS the logo's frame, in both the hero state and the
-   scrolled one. The size is tied to the viewport, not to fixed rem steps: at a
-   fixed height the lockup stayed the same pixels on a small or scaled-up
-   display (Windows at 125%) and there took over the screen and crowded the hero
-   headline. Capping on BOTH axes keeps it proportional — vw so it never
-   dominates a narrow window, vh so a short one keeps room for the hero. The
-   lift + shadow stay in both states: the bar is dark either way. */
-.bhy-nav-bar {
-  height: clamp(4.5rem, min(13vw, 22vh), 17rem);
-  transition: height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.bhy-nav-solid .bhy-nav-bar {
-  height: clamp(3.5rem, min(7vw, 14vh), 9rem);
-}
-.bhy-logo-link {
-  display: block;
-  flex: none;
-  align-self: stretch;
-}
-.bhy-logo {
-  height: 100%;
-  width: auto;
-  /* Two shadows, not one: the tight dark halo separates the thin strokes from
-     a bright frame, the wide one seats the mark on the film. Dropped once the
-     bar goes solid, where the scrim no longer exists. */
-  filter: brightness(1.22) contrast(1.04) drop-shadow(0 1px 3px rgba(10, 6, 3, 0.85))
-    drop-shadow(0 3px 18px rgba(10, 6, 3, 0.6));
-}
-.bhy-nav-solid .bhy-logo {
-  filter: brightness(1.22) contrast(1.04) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.5));
-}
-/* Same treatment for the words riding the film. */
-.bhy-nav:not(.bhy-nav-solid) .bhy-nav-link,
-.bhy-nav:not(.bhy-nav-solid) .bhy-lang {
-  text-shadow: 0 1px 3px rgba(10, 6, 3, 0.8);
-}
-
-/* nav */
+/* ================= the floating lockup (there is no bar) =================
+   Nothing sits behind the logo and the links: no bar, no scrim, no blur.
+   Legibility comes from painting the whole row TWICE — an ivory print for
+   dark ground, an ink print for light — and clipping the ink copy to exactly
+   the part of the strip that is over a light section right now (motion.ts
+   writes that one clip-path, from cached section edges and scrollY, with no
+   layout read per frame). When a section edge crosses the strip the lockup
+   is split across it, half ivory and half ink, which is the whole point.
+   Both prints are real files, so the brand colours stay exact — a blend mode
+   would have inverted them into something that is not hers. */
 .bhy-nav {
   position: fixed;
   top: 0;
   inset-inline: 0;
   z-index: 50;
-  color: #f5efe6;
+  /* the strip is a pane of glass: only its controls take the pointer */
+  pointer-events: none;
   animation: bhy-nav-in 0.5s cubic-bezier(0.05, 0.7, 0.1, 1) 0.1s backwards;
-  /* M3 treats the bar as utility chrome: returning it rides
-     standard-decelerate at 250ms... */
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease,
-    box-shadow 0.35s ease,
-    transform 0.25s cubic-bezier(0, 0, 0, 1);
-}
-.bhy-nav-hidden {
-  transform: translateY(-100%);
-  /* ...while tucking it away is an exit: standard-accelerate, and
-     shorter (200ms) because departures need less of the eye. */
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease,
-    box-shadow 0.35s ease,
-    transform 0.2s cubic-bezier(0.3, 0, 1, 1);
 }
 @keyframes bhy-nav-in {
   from {
@@ -270,13 +225,99 @@ html {
     opacity: 1;
   }
 }
-.bhy-nav-solid {
-  /* Carries the hero's dark tone down the page instead of flipping to ivory, so
-     the bar looks the same scrolled as it does on the opening screen. Opaque on
-     purpose — a translucent bar picked up each section and showed a seam. */
-  background: var(--bhy-ink);
+/* Tall over the film, compact once the reading starts. The lockup is the
+   only masthead this page has, so it never tucks away. */
+.bhy-nav-strip {
+  position: relative;
+  height: clamp(4.5rem, min(13vw, 22vh), 15rem);
+  transition: height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bhy-nav-solid .bhy-nav-strip {
+  height: clamp(3.75rem, min(7vw, 14vh), 9rem);
+}
+.bhy-nav-row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-inline: 1.125rem;
   color: var(--bhy-paper);
-  box-shadow: 0 1px 0 rgba(245, 239, 230, 0.14);
+}
+.bhy-nav-row > * {
+  pointer-events: auto;
+}
+.bhy-nav-cut {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* until motion.ts speaks, assume dark ground and show none of the ink */
+  clip-path: inset(100% 0 0 0);
+}
+.bhy-nav-cut .bhy-nav-row {
+  color: var(--bhy-ink);
+}
+.bhy-nav-cut .bhy-nav-row > * {
+  pointer-events: none;
+}
+/* Over the film the ground is a photograph, not a flat colour: mid-bright
+   the whole way through (measured 140-161 of 255 across all 241 frames, so
+   the ink print reads at 3.8:1 where the ivory one manages 2.2). A soft
+   cream halo carries it over the brighter frames without putting a bar
+   back. It is a static filter on a 90px-tall strip, not an animated one. */
+.bhy-nav-onfilm .bhy-nav-cut .bhy-nav-row {
+  filter: drop-shadow(0 0 1px rgba(252, 249, 243, 0.95))
+    drop-shadow(0 1px 3px rgba(252, 249, 243, 0.85))
+    drop-shadow(0 0 24px rgba(252, 249, 243, 0.6));
+}
+.bhy-logo-link {
+  display: block;
+  flex: none;
+  height: 82%;
+}
+.bhy-logo {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+.bhy-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+@media (min-width: 768px) {
+  .bhy-nav-row {
+    padding-inline: 2rem;
+  }
+  .bhy-nav-controls {
+    gap: 2.25rem;
+    padding-inline-end: 0.5rem;
+  }
+}
+@media (min-width: 1280px) {
+  .bhy-nav-controls {
+    padding-inline-end: 4rem;
+  }
+}
+/* Written as plain CSS, not Tailwind responsive utilities: everything in
+   this file sits OUTSIDE Tailwind's layers and therefore beats them, so a
+   `md:hidden` on one of these elements would silently do nothing. */
+.bhy-nav-links {
+  display: none;
+}
+.bhy-nav-contact {
+  display: none;
+}
+@media (min-width: 768px) {
+  .bhy-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2.25rem;
+  }
+  .bhy-nav-contact {
+    display: inline-block;
+  }
 }
 .bhy-nav-link {
   position: relative;
@@ -294,8 +335,8 @@ html {
   transform-origin: 100% 50%;
   transition: transform 0.3s ease;
 }
-.bhy-nav-link:hover::after,
-.bhy-nav-link:focus-visible::after {
+a.bhy-nav-link:hover::after,
+a.bhy-nav-link:focus-visible::after {
   transform: scaleX(1);
   transform-origin: 0 50%;
 }
@@ -303,12 +344,12 @@ html {
   border-bottom: 1px solid currentColor;
   padding-bottom: 2px;
   font-size: 0.9375rem;
-  opacity: 0.85;
+  line-height: 1.4;
   transition: opacity 0.25s ease;
 }
-.bhy-lang:hover,
-.bhy-lang:focus-visible {
-  opacity: 1;
+button.bhy-lang:hover,
+button.bhy-lang:focus-visible {
+  opacity: 0.75;
 }
 
 /* The hero copy leaves on a class toggle, never per scroll frame — see
@@ -789,8 +830,14 @@ html {
     transform 0.55s cubic-bezier(0.05, 0.7, 0.1, 1),
     visibility 0s;
 }
-.bhy-menu-open .bhy-nav {
-  transform: none;
+/* The curtain is ink, whatever section it was opened over, so the lockup
+   above it has to be the ivory print for as long as it is up. The clip is an
+   inline style written by motion.ts, hence the shout. */
+.bhy-menu-open .bhy-nav-cut {
+  clip-path: inset(100% 0 0 0) !important;
+}
+.bhy-menu-open .bhy-nav-onfilm .bhy-nav-row {
+  filter: none;
 }
 html.bhy-menu-open {
   overflow: hidden;
@@ -908,7 +955,10 @@ html.bhy-menu-open {
 .bhy-ribbon-track {
   display: flex;
   width: max-content;
-  animation: bhy-ribbon 52s linear infinite;
+  /* one half is three copies of the list, so the run is three times as long
+     as it used to be and the duration follows it: the words keep the same
+     unhurried speed across the screen. */
+  animation: bhy-ribbon 156s linear infinite;
   animation-play-state: paused;
 }
 .bhy-ribbon-live .bhy-ribbon-track {

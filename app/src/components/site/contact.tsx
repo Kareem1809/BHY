@@ -59,7 +59,7 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
   };
 
   return (
-    <section id="contact" className="bg-[#FBF7F0] py-28 md:py-36">
+    <section id="contact" data-band="light" className="bg-[#FBF7F0] py-28 md:py-36">
       <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-16 px-6 md:grid-cols-12">
         <div className="md:col-span-5">
           <p data-drift="24" className="bhy-eyebrow">

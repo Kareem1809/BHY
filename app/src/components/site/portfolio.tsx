@@ -67,7 +67,7 @@ export function Portfolio({ t }: { t: SiteStrings }) {
   useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
 
   return (
-    <section ref={section} id="portfolio" className="bg-[#F5EFE6] py-28 md:py-36">
+    <section ref={section} id="portfolio" data-band="light" className="bg-[#F5EFE6] py-28 md:py-36">
       <div className="mx-auto w-full max-w-[1280px] px-6">
         <div className="text-center">
           <p data-drift="24" className="bhy-eyebrow">

@@ -18,12 +18,18 @@ export function Ribbon({ t }: { t: SiteStrings }) {
     return () => obs.disconnect();
   }, []);
 
-  // Two copies back to back: the loop hands over from one to the other at
-  // exactly half the track, so the seam is invisible.
-  const words = [...t.ribbon, ...t.ribbon];
+  // Two identical halves back to back: at the end of the run the track has
+  // travelled exactly one half, so the second half is standing where the
+  // first began and the loop hands over invisibly. For that to hold, ONE
+  // half must be wider than the screen — otherwise the track runs out and
+  // the reader watches the words drift away into an empty strip before the
+  // jump back. The list is therefore repeated inside each half until it
+  // comfortably clears the widest desktop.
+  const half = [...t.ribbon, ...t.ribbon, ...t.ribbon];
+  const words = [...half, ...half];
 
   return (
-    <div ref={ref} aria-hidden="true" className="bhy-ribbon">
+    <div ref={ref} aria-hidden="true" data-band="light" className="bhy-ribbon">
       <div className="bhy-ribbon-track">
         {words.map((word, i) => (
           <span key={`${word}-${i}`} className="bhy-ribbon-word">

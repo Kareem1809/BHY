@@ -10,7 +10,7 @@ export function Footer({ t }: { t: SiteStrings }) {
   ] as const;
 
   return (
-    <footer className="bg-[#EFE4D4]">
+    <footer data-band="light" className="bg-[#EFE4D4]">
       {/* Same shape as the navbar: full-bleed, logo holding the right edge at the
           navbar's own inset, the columns riding beside it on the left. Keeping
           them on one row is what stops the text from dropping below the logo. */}

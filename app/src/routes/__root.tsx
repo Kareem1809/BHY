@@ -42,8 +42,9 @@ function buildHead() {
       { name: "twitter:title", content: SEO.title },
       { name: "twitter:description", content: SEO.description },
       { name: "twitter:image", content: OG_IMAGE },
-      // The hero is espresso, so the phone's browser chrome matches it.
-      { name: "theme-color", content: "#2A1E16" },
+      // Paper, not espresso: with no bar under it, a dark strip across the
+      // top of the phone reads as exactly the bar this page does not have.
+      { name: "theme-color", content: "#F5EFE6" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

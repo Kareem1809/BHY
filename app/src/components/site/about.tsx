@@ -5,7 +5,7 @@ import { Words } from "./words";
 
 export function About({ t }: { t: SiteStrings }) {
   return (
-    <section id="about" className="bg-[#FBF7F0] py-28 md:py-36">
+    <section id="about" data-band="light" className="bg-[#FBF7F0] py-28 md:py-36">
       <div className="mx-auto w-full max-w-[1280px] px-6">
         <div className="grid grid-cols-1 gap-16 md:grid-cols-12">
           <div className="md:col-span-5">

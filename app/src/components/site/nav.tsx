@@ -19,6 +19,44 @@ const LINKS = [
 
 const MENU_LINKS = [...LINKS, ["#contact", "contact"]] as const;
 
+// The ink twin of the row above. It is painted, never touched: no links, no
+// buttons, hidden from assistive technology, and clipped by motion.ts to
+// exactly the part of the strip that currently sits over a light section.
+// Same classes and same order as the real row, so the two line up to the
+// pixel and a section edge cuts the lockup cleanly in half.
+function GhostRow({ t }: { t: SiteStrings }) {
+  return (
+    <div className="bhy-nav-cut" aria-hidden="true">
+      <div className="bhy-nav-row">
+        <span className="bhy-logo-link">
+          <img
+            src="/assets/footer-logo.webp"
+            alt=""
+            width={1800}
+            height={1001}
+            className="bhy-logo"
+          />
+        </span>
+        <div className="bhy-nav-controls">
+          <span className="bhy-nav-links">
+            {LINKS.map(([, key]) => (
+              <span key={key} className="bhy-nav-link">
+                {t.nav[key]}
+              </span>
+            ))}
+          </span>
+          <span className="bhy-lang">{t.langToggle}</span>
+          <span className="bhy-nav-link bhy-nav-contact">{t.nav.contact}</span>
+          <span className="bhy-burger">
+            <span />
+            <span />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type NavProps = {
   t: SiteStrings;
   lang: Lang;
@@ -27,8 +65,8 @@ type NavProps = {
 
 export function SiteNav({ t, lang, onToggleLang }: NavProps) {
   // The phone menu: a curtain of the five destinations. It is a sibling of
-  // the bar, not a child, because the bar animates its transform and a fixed
-  // element inside a transformed parent would be boxed into the bar.
+  // the strip, not a child, because a fixed element inside a transformed
+  // parent would be boxed into that parent.
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -53,54 +91,54 @@ export function SiteNav({ t, lang, onToggleLang }: NavProps) {
 
   return (
     <>
+      {/* No bar: the lockup and the links float on the page itself, on
+          nothing. Legibility comes from painting the row twice, ivory and
+          ink, and clipping the ink copy to whatever is light behind it. */}
       <header data-site-nav className="bhy-nav">
-        {/* Full-bleed, not the 1280px content column: the logo hugs the right
-            edge (the RTL start) instead of stopping at the text measure.
-            Everything is top-aligned so the links sit high in the tall hero
-            bar instead of floating at its vertical middle. */}
-        <div className="bhy-nav-bar flex w-full items-start justify-between gap-6 px-5 md:px-8">
-          <a href="#top" onClick={close} className="bhy-logo-link" aria-label={t.brandLatin}>
-            <img
-              src="/assets/logo.webp"
-              alt={t.brandLatin}
-              width={1800}
-              height={1001}
-              className="bhy-logo"
-            />
-          </a>
-          {/* Menu, language and contact travel together on the left, held off
-              the screen edge by the inline-end margin (the left side, in RTL). */}
-          <div className="me-2 flex items-center gap-6 pt-6 md:me-12 md:gap-9 md:pt-8 xl:me-24">
-            <nav aria-label={t.footer.menu} className="hidden items-center gap-9 md:flex">
-              {LINKS.map(([href, key]) => (
-                <a key={key} href={href} className="bhy-nav-link">
-                  {t.nav[key]}
-                </a>
-              ))}
-            </nav>
-            <button
-              type="button"
-              onClick={onToggleLang}
-              className="bhy-lang"
-              lang={lang === "he" ? "ar" : "he"}
-            >
-              {t.langToggle}
-            </button>
-            <a href="#contact" className="bhy-nav-link hidden sm:block">
-              {t.nav.contact}
+        <div className="bhy-nav-strip">
+          <div className="bhy-nav-row">
+            <a href="#top" onClick={close} className="bhy-logo-link" aria-label={t.brandLatin}>
+              <img
+                src="/assets/logo.webp"
+                alt={t.brandLatin}
+                width={1800}
+                height={1001}
+                className="bhy-logo"
+              />
             </a>
-            <button
-              type="button"
-              className="bhy-burger md:hidden"
-              aria-expanded={open}
-              aria-controls="site-menu"
-              aria-label={open ? t.nav.close : t.nav.menu}
-              onClick={() => setOpen((value) => !value)}
-            >
-              <span />
-              <span />
-            </button>
+            <div className="bhy-nav-controls">
+              <nav aria-label={t.footer.menu} className="bhy-nav-links">
+                {LINKS.map(([href, key]) => (
+                  <a key={key} href={href} className="bhy-nav-link">
+                    {t.nav[key]}
+                  </a>
+                ))}
+              </nav>
+              <button
+                type="button"
+                onClick={onToggleLang}
+                className="bhy-lang"
+                lang={lang === "he" ? "ar" : "he"}
+              >
+                {t.langToggle}
+              </button>
+              <a href="#contact" className="bhy-nav-link bhy-nav-contact">
+                {t.nav.contact}
+              </a>
+              <button
+                type="button"
+                className="bhy-burger"
+                aria-expanded={open}
+                aria-controls="site-menu"
+                aria-label={open ? t.nav.close : t.nav.menu}
+                onClick={() => setOpen((value) => !value)}
+              >
+                <span />
+                <span />
+              </button>
+            </div>
           </div>
+          <GhostRow t={t} />
         </div>
       </header>
 

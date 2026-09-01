@@ -7,7 +7,7 @@ import { Words } from "./words";
 // as the reader arrives.
 export function Process({ t }: { t: SiteStrings }) {
   return (
-    <section id="process" className="bg-[#F5EFE6] py-28 md:py-36">
+    <section id="process" data-band="light" className="bg-[#F5EFE6] py-28 md:py-36">
       <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-16 px-6 md:grid-cols-12">
         <div className="md:col-span-4">
           <p data-drift="24" className="bhy-eyebrow">

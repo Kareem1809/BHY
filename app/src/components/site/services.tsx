@@ -5,7 +5,7 @@ import { Words } from "./words";
 
 export function Services({ t }: { t: SiteStrings }) {
   return (
-    <section id="services" className="relative overflow-hidden bg-[#2A1E16] py-28 md:py-36">
+    <section id="services" data-band="dark" className="relative overflow-hidden bg-[#2A1E16] py-28 md:py-36">
       {/* The softness is baked into this file, not applied with a CSS blur.
           Live-blurring it meant the GPU re-filtering a 4834x4184 surface on
           every scroll frame: measured on Kareem's screen, that was 47 of the

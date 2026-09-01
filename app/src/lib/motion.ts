@@ -258,8 +258,9 @@ export function useSiteMotion(deps: readonly unknown[]) {
           }
 
           if (nav && hero) {
-            // Past the hero the bar goes solid and the WhatsApp door opens;
-            // both are one class toggle each.
+            // Past the film the lockup shrinks and the WhatsApp door opens.
+            // It never tucks away: it is the only masthead the page has, and
+            // on a phone it carries the menu and the language switch.
             ScrollTrigger.create({
               trigger: hero,
               start: "bottom top+=96",
@@ -272,37 +273,101 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 whatsapp?.classList.remove("bhy-wa-show");
               },
             });
-            // Tuck the nav away while scrolling down, bring it back on the
-            // first upward movement, but never during the film: the logo is
-            // meant to hold the corner for the whole hero.
-            // The hero's height is measured on refresh and cached: reading
-            // offsetHeight inside onUpdate forced a layout flush on every
-            // scroll frame of the whole page, right after GSAP had written
-            // its transforms (layout thrashing, worst where the most tweens
-            // run at once, which is exactly where it showed).
-            let heroHeight = (hero as HTMLElement).offsetHeight;
-            const measureHero = () => {
-              heroHeight = (hero as HTMLElement).offsetHeight;
-            };
-            ScrollTrigger.addEventListener("refresh", measureHero);
-            navCleanup = () => ScrollTrigger.removeEventListener("refresh", measureHero);
-            // Phones keep the bar: it is the only place the menu button and
-            // the language switch live, and a reader who stops mid-page was
-            // left with no way back to either of them. The tuck-away is a
-            // desktop flourish, where the pointer is always a flick from the
-            // top edge. matchMedia is read live, so a rotation follows suit.
-            const wide = window.matchMedia("(min-width: 768px)");
-            ScrollTrigger.create({
-              start: 0,
-              end: "max",
-              onUpdate: (self) => {
-                const pastHero = self.scroll() > heroHeight;
-                nav.classList.toggle(
-                  "bhy-nav-hidden",
-                  wide.matches && pastHero && self.direction === 1,
-                );
-              },
-            });
+
+            // The lockup takes its colour from whatever is behind it. Every
+            // section declares its ground with data-band, their edges are
+            // cached in document coordinates on refresh, and each scroll
+            // update is pure arithmetic on scrollY — no layout read, and one
+            // string written only when it actually changes. The ink copy is
+            // clipped to the light stretch, so an edge crossing the strip
+            // splits the lockup in two colours at exactly that line.
+            const cut = nav.querySelector<HTMLElement>(".bhy-nav-cut");
+            const strip = nav.querySelector<HTMLElement>(".bhy-nav-strip");
+            if (cut && strip) {
+              type Band = { top: number; bottom: number; light: boolean; film: boolean };
+              let bands: Band[] = [];
+              let stripHeight = 0;
+              let lastClip = "";
+              let lastOnFilm: boolean | null = null;
+
+              const measureBands = () => {
+                bands = Array.from(document.querySelectorAll<HTMLElement>("[data-band]"))
+                  .map((el) => {
+                    const rect = el.getBoundingClientRect();
+                    const top = rect.top + window.scrollY;
+                    return {
+                      top,
+                      bottom: top + rect.height,
+                      light: el.dataset.band === "light",
+                      film: el.hasAttribute("data-film"),
+                    };
+                  })
+                  .sort((a, b) => a.top - b.top);
+                lastClip = "";
+                lastOnFilm = null;
+              };
+
+              const bandAt = (pos: number) => {
+                for (const band of bands) if (pos >= band.top && pos < band.bottom) return band;
+                return pos < bands[0].top ? bands[0] : bands[bands.length - 1];
+              };
+
+              const paint = (scroll: number) => {
+                if (!bands.length || !stripHeight) return;
+                const top = bandAt(scroll + 1);
+                const bottom = bandAt(scroll + stripHeight - 1);
+                let clip: string;
+                if (top.light === bottom.light) {
+                  clip = top.light ? "inset(0px 0px 0px 0px)" : "inset(100% 0px 0px 0px)";
+                } else {
+                  // the two bands touch, so their shared edge is the split
+                  const edge = Math.round(top.bottom - scroll);
+                  clip = top.light
+                    ? `inset(0px 0px ${stripHeight - edge}px 0px)`
+                    : `inset(${edge}px 0px 0px 0px)`;
+                }
+                if (clip !== lastClip) {
+                  cut.style.clipPath = clip;
+                  lastClip = clip;
+                }
+                const onFilm = top.film || bottom.film;
+                if (onFilm !== lastOnFilm) {
+                  nav.classList.toggle("bhy-nav-onfilm", onFilm);
+                  lastOnFilm = onFilm;
+                }
+              };
+
+              let lastScroll = 0;
+              measureBands();
+              const remeasure = () => {
+                measureBands();
+                paint(lastScroll);
+              };
+              ScrollTrigger.addEventListener("refresh", remeasure);
+              // The strip is tall over the film and compact below it, and the
+              // clip is expressed in pixels from its top: a stale height put
+              // the split line in the wrong place, or past the end of the
+              // strip entirely. The observer follows the real height through
+              // the whole transition instead of guessing when it settles.
+              const watchStrip = new ResizeObserver(() => {
+                stripHeight = strip.offsetHeight;
+                lastClip = "";
+                paint(lastScroll);
+              });
+              watchStrip.observe(strip);
+              navCleanup = () => {
+                watchStrip.disconnect();
+                ScrollTrigger.removeEventListener("refresh", remeasure);
+              };
+              ScrollTrigger.create({
+                start: 0,
+                end: "max",
+                onUpdate: (self) => {
+                  lastScroll = self.scroll();
+                  paint(lastScroll);
+                },
+              });
+            }
           }
 
           const progress = document.querySelector("[data-progress]");
