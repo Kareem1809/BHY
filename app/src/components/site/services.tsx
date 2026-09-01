@@ -1,4 +1,5 @@
 import type { SiteStrings } from "../../lib/i18n";
+import { pic } from "../../lib/images";
 import { Arrow } from "./arrow";
 import { Words } from "./words";
 
@@ -7,11 +8,12 @@ export function Services({ t }: { t: SiteStrings }) {
     <section id="services" className="relative overflow-hidden bg-[#2A1E16] py-28 md:py-36">
       {/* The softness is baked into this file, not applied with a CSS blur.
           Live-blurring it meant the GPU re-filtering a 4834x4184 surface on
-          every scroll frame — measured on Kareem's screen, that was 47 of the
+          every scroll frame: measured on Kareem's screen, that was 47 of the
           54 dropped frames on the whole page, with no main-thread work at
           all. Identical to look at, free to scroll past. */}
       <img
-        src="/assets/services-bg.jpg"
+        {...pic("/assets/services-bg", 1600)}
+        sizes="100vw"
         alt=""
         loading="lazy"
         decoding="async"
@@ -52,7 +54,8 @@ export function Services({ t }: { t: SiteStrings }) {
                   </span>
                   <figure className="bhy-fig mt-5 overflow-hidden">
                     <img
-                      src={`/assets/service-${i + 1}.jpg`}
+                      {...pic(`/assets/service-${i + 1}`, 1000)}
+                      sizes="(min-width: 640px) 30vw, 100vw"
                       alt=""
                       loading="lazy"
                       decoding="async"

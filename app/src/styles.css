@@ -731,3 +731,306 @@ html {
     display: none;
   }
 }
+
+/* ================= phone menu ================= */
+.bhy-burger {
+  position: relative;
+  display: inline-flex;
+  height: 44px;
+  width: 44px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-inline-end: -10px;
+  color: inherit;
+}
+.bhy-burger span {
+  display: block;
+  height: 1.5px;
+  width: 24px;
+  background: currentColor;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bhy-menu-open .bhy-burger span:first-child {
+  transform: translateY(4.25px) rotate(45deg);
+}
+.bhy-menu-open .bhy-burger span:last-child {
+  transform: translateY(-4.25px) rotate(-45deg);
+}
+@media (min-width: 768px) {
+  .bhy-burger {
+    display: none;
+  }
+}
+/* A curtain in the bar's own ink, so the two read as one surface. It drops
+   on the emphasized-decelerate curve and leaves on standard-accelerate;
+   transform and opacity only. While it is open the page beneath is held
+   still (Lenis is stopped, the overflow lock covers reduced motion) and the
+   bar is forbidden from tucking away. */
+.bhy-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(6.5rem, 24vh, 9rem) 1.5rem 2rem;
+  background: var(--bhy-ink);
+  color: var(--bhy-paper);
+  transform: translateY(-100%);
+  visibility: hidden;
+  touch-action: none;
+  overscroll-behavior: contain;
+  transition:
+    transform 0.4s cubic-bezier(0.3, 0, 0.8, 0.15),
+    visibility 0s linear 0.4s;
+}
+.bhy-menu-open .bhy-menu {
+  transform: none;
+  visibility: visible;
+  transition:
+    transform 0.55s cubic-bezier(0.05, 0.7, 0.1, 1),
+    visibility 0s;
+}
+.bhy-menu-open .bhy-nav {
+  transform: none;
+}
+html.bhy-menu-open {
+  overflow: hidden;
+}
+.bhy-menu-nav ol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.bhy-menu-link {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  font-family: var(--bhy-font-display);
+  font-weight: 500;
+  font-size: clamp(2.25rem, 9vw, 3.25rem);
+  line-height: 1.1;
+  transform: translateY(24px);
+  opacity: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.05, 0.7, 0.1, 1),
+    opacity 0.5s ease;
+}
+.bhy-menu-open .bhy-menu-link {
+  transform: none;
+  opacity: 1;
+  transition-delay: calc(140ms + var(--i) * 55ms);
+}
+.bhy-menu-num {
+  font-family: var(--bhy-font-latin);
+  font-size: 0.875rem;
+  letter-spacing: 0.18em;
+  color: var(--bhy-rose);
+}
+.bhy-menu-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(245, 239, 230, 0.18);
+  font-size: 0.9375rem;
+}
+.bhy-menu-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+/* ================= WhatsApp door ================= */
+.bhy-wa {
+  position: fixed;
+  bottom: 1.25rem;
+  inset-inline-end: 1.25rem;
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  height: 3.5rem;
+  min-width: 3.5rem;
+  border-radius: 9999px;
+  background: var(--bhy-espresso);
+  color: var(--bhy-paper);
+  box-shadow:
+    inset 0 1px 0 rgba(245, 239, 230, 0.12),
+    0 14px 32px -14px rgba(20, 12, 6, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px) scale(0.9);
+  transition:
+    transform 0.45s cubic-bezier(0.05, 0.7, 0.1, 1),
+    opacity 0.45s ease,
+    background-color 0.3s ease,
+    visibility 0s linear 0.45s;
+}
+.bhy-wa-show {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+.bhy-menu-open .bhy-wa {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px) scale(0.9);
+}
+.bhy-wa:hover,
+.bhy-wa:focus-visible {
+  background: var(--bhy-rose);
+}
+.bhy-wa-label {
+  display: none;
+}
+@media (min-width: 768px) {
+  .bhy-wa {
+    padding-inline: 1.375rem 1.25rem;
+  }
+  .bhy-wa-label {
+    display: inline;
+    white-space: nowrap;
+    font-size: 0.9375rem;
+  }
+}
+
+/* ================= ribbon ================= */
+.bhy-ribbon {
+  overflow: hidden;
+  border-block: 1px solid rgba(62, 46, 35, 0.18);
+  background: var(--bhy-paper);
+  padding: 1.375rem 0;
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+.bhy-ribbon-track {
+  display: flex;
+  width: max-content;
+  animation: bhy-ribbon 52s linear infinite;
+  animation-play-state: paused;
+}
+.bhy-ribbon-live .bhy-ribbon-track {
+  animation-play-state: running;
+}
+@keyframes bhy-ribbon {
+  to {
+    transform: translate3d(50%, 0, 0);
+  }
+}
+.bhy-ribbon-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.75rem;
+  padding-inline-end: 1.75rem;
+  white-space: nowrap;
+  font-family: var(--bhy-font-display);
+  font-weight: 500;
+  font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  color: var(--bhy-muted);
+}
+.bhy-ribbon-dot {
+  display: block;
+  height: 5px;
+  width: 5px;
+  border-radius: 9999px;
+  background: var(--bhy-rose);
+}
+
+/* ================= about pillars ================= */
+.bhy-pillar {
+  border-top: 1px solid rgba(62, 46, 35, 0.22);
+  padding-top: 1.5rem;
+}
+.bhy-pillar-num {
+  display: block;
+  font-family: var(--bhy-font-latin);
+  font-size: 0.875rem;
+  letter-spacing: 0.18em;
+  color: var(--bhy-rose);
+}
+
+/* ================= process ledger ================= */
+.bhy-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.25rem 1fr;
+  grid-template-areas:
+    "num body"
+    "num fig";
+  column-gap: 1.25rem;
+  row-gap: 1.5rem;
+  padding: 2.25rem 0 2.5rem;
+}
+.bhy-step:last-child {
+  border-bottom: 1px solid rgba(62, 46, 35, 0.22);
+}
+.bhy-step-rule {
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 1px;
+  background: rgba(62, 46, 35, 0.28);
+  transform-origin: 100% 50%;
+}
+.bhy-step-num {
+  grid-area: num;
+  font-family: var(--bhy-font-latin);
+  font-weight: 500;
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  line-height: 0.9;
+  color: var(--bhy-rose);
+}
+.bhy-step-body {
+  grid-area: body;
+}
+.bhy-step-fig {
+  grid-area: fig;
+  width: 7rem;
+}
+@media (min-width: 768px) {
+  .bhy-step {
+    grid-template-columns: 5.5rem 1fr 10rem;
+    grid-template-areas: "num body fig";
+    column-gap: 2rem;
+    padding: 2.75rem 0 3rem;
+    align-items: start;
+  }
+  .bhy-step-fig {
+    width: 10rem;
+    justify-self: end;
+  }
+}
+
+/* ================= footer: back to top ================= */
+.bhy-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  align-self: start;
+  font-size: 0.9375rem;
+  color: var(--bhy-ink);
+}
+.bhy-top-ring {
+  display: inline-flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(62, 46, 35, 0.35);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bhy-top:hover .bhy-top-ring {
+  background: var(--bhy-ink);
+  color: var(--bhy-paper);
+  transform: translateY(-3px);
+}

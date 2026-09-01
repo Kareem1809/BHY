@@ -1,11 +1,12 @@
 import type { SiteStrings } from "../../lib/i18n";
+import { Arrow } from "./arrow";
 
 export function Footer({ t }: { t: SiteStrings }) {
   const links = [
     ["#about", t.nav.about],
     ["#portfolio", t.nav.portfolio],
     ["#services", t.nav.services],
-    ["#journal", t.nav.journal],
+    ["#process", t.nav.process],
   ] as const;
 
   return (
@@ -15,11 +16,13 @@ export function Footer({ t }: { t: SiteStrings }) {
           them on one row is what stops the text from dropping below the logo. */}
       <div className="grid w-full grid-cols-1 gap-12 px-5 py-16 md:grid-cols-3 md:items-start md:px-8 md:py-20">
         {/* A dedicated print of the lockup for the ivory band: denser strokes
-            and a deeper bronze, baked into the file — no runtime filters. */}
+            and a deeper bronze, baked into the file, no runtime filters. */}
         <img
           data-drift="24"
-          src="/assets/footer-logo.png"
+          src="/assets/footer-logo.webp"
           alt="Basma Haj Yahia, architecture & interior design"
+          width={1800}
+          height={1001}
           loading="lazy"
           decoding="async"
           className="w-80 max-w-full shrink-0 md:w-[34rem] md:justify-self-start"
@@ -61,6 +64,12 @@ export function Footer({ t }: { t: SiteStrings }) {
             </ul>
           </div>
         </div>
+        <a href="#top" data-drift="40" className="bhy-top md:justify-self-end">
+          <span>{t.footer.top}</span>
+          <span className="bhy-top-ring">
+            <Arrow className="w-4 rotate-90" />
+          </span>
+        </a>
       </div>
       <div className="border-t border-[#3E2E23]/15">
         <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-3 px-6 py-6 text-sm text-[#6B5748]">

@@ -2,25 +2,42 @@ import { useEffect } from "react";
 
 type Cleanup = () => void;
 
+// The live smooth-scroll instance, so the phone menu can hold the page still
+// while it is open. Null before motion starts and under reduced motion, where
+// the stylesheet's overflow lock does the job instead.
+let activeLenis: { stop: () => void; start: () => void } | null = null;
+
+export function lockScroll(locked: boolean) {
+  if (locked) activeLenis?.stop();
+  else activeLenis?.start();
+}
+
 // Central motion director. Lenis smooth scroll is bridged to GSAP's ticker and
 // every scroll effect is scrub-linked WITH LAG (scrub: 0.9) so reveals ease
 // behind the scroll instead of snapping to it. Bound through data attributes:
 //   data-drift="<px>"   vertical drift toward rest
 //   data-words          per-word rise of the .bhy-w-inner spans inside
-//   data-img-reveal     clip-path bloom of an image frame
+//   data-img-reveal     the photograph eases back to rest inside its frame
+//   data-grow           the block grows to full size as it arrives
+//   data-rule           a hairline draws itself across
 //   data-parallax       slow vertical parallax on the inner <img>
 //   data-bg-parallax    parallax on a full-bleed background <img>
 //   data-progress       page scroll-progress hairline
-// Everything animates transform or clip only (content is never hidden behind
+// Everything animates transform only (content is never hidden behind
 // opacity). Under prefers-reduced-motion only the functional nav state runs.
 export function useSiteMotion(deps: readonly unknown[]) {
   useEffect(() => {
     const nav = document.querySelector("[data-site-nav]");
+    const whatsapp = document.querySelector("[data-whatsapp]");
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      // The solid nav swap is contrast, not decoration: keep it working.
-      const onScroll = () =>
-        nav?.classList.toggle("bhy-nav-solid", window.scrollY > window.innerHeight * 0.8);
+      // The solid nav swap is contrast, not decoration: keep it working, and
+      // the WhatsApp door still has to open once the reader is past the hero.
+      const onScroll = () => {
+        const past = window.scrollY > window.innerHeight * 0.8;
+        nav?.classList.toggle("bhy-nav-solid", past);
+        whatsapp?.classList.toggle("bhy-wa-show", past);
+      };
       onScroll();
       window.addEventListener("scroll", onScroll, { passive: true });
       return () => window.removeEventListener("scroll", onScroll);
@@ -39,9 +56,9 @@ export function useSiteMotion(deps: readonly unknown[]) {
         // Phone browsers collapse and restore their URL bar while scrolling,
         // which fires a resize mid-scroll; a full ScrollTrigger refresh at
         // that moment recomputes every trigger against the new viewport and
-        // shifted the About reveals past their range — they then sat frozen
-        // on their final frame. This tells ScrollTrigger to ignore exactly
-        // that resize (GSAP's documented fix for it).
+        // shifted the About reveals past their range, so they sat frozen on
+        // their final frame. This tells ScrollTrigger to ignore exactly that
+        // resize (GSAP's documented fix for it).
         ScrollTrigger.config({ ignoreMobileResize: true });
 
         const lenis = new Lenis({
@@ -49,6 +66,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
           lerp: 0.09,
           anchors: { offset: 0 },
         });
+        activeLenis = lenis;
         lenis.on("scroll", ScrollTrigger.update);
         const tick = (time: number) => lenis.raf(time * 1000);
         gsap.ticker.add(tick);
@@ -67,12 +85,12 @@ export function useSiteMotion(deps: readonly unknown[]) {
         const ctx = gsap.context(() => {
           const hero = document.querySelector("[data-hero]");
 
-          // Scroll-driven film — the Higgsfield engine, nothing more:
-          // fetch the clip fully into memory, then each tick glide the
-          // playhead a fifth of the way toward where the scroll points.
-          // Until the blob lands the poster holds the opening frame, and
-          // playback joins wherever the reader already is — one seek, no
-          // catch-up journey, no source swapping.
+          // Scroll-driven film: the Higgsfield engine, nothing more. Fetch
+          // the clip fully into memory, then each tick glide the playhead a
+          // fifth of the way toward where the scroll points. Until the blob
+          // lands the poster holds the opening frame, and playback joins
+          // wherever the reader already is: one seek, no catch-up journey,
+          // no source swapping.
           const film = document.querySelector<HTMLVideoElement>("[data-hero-film]");
           if (hero && film) {
             const density = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
@@ -84,7 +102,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
             let targetFrac = 0;
             let blobUrl = "";
 
-            // The film stays invisible until the reader's first gesture — the
+            // The film stays invisible until the reader's first gesture; the
             // poster underneath is the identical frame. The decoder warm-up
             // (a muted play/pause iOS insists on) visibly played a beat of
             // film on phones when it ran at load; tied to the first touch,
@@ -138,8 +156,8 @@ export function useSiteMotion(deps: readonly unknown[]) {
               .catch(() => {});
 
             // Glide toward the target; write currentTime only past a small
-            // epsilon and never while a seek is in flight — piled-up seeks
-            // are what reads as stutter.
+            // epsilon and never while a seek is in flight, because piled-up
+            // seeks are what reads as stutter.
             const epsilon = big ? 0.008 : 0.02;
             const chase = () => {
               if (!filmLength || film.seeking) return;
@@ -200,7 +218,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
               .timeline({
                 scrollTrigger: {
                   // The section is 260svh tall and its stage is CSS-sticky, so
-                  // scrolling its own height is the scrub track — no pin, no
+                  // scrolling its own height is the scrub track: no pin, no
                   // fixed positioning, nothing laid over the next section.
                   trigger: hero,
                   start: "top top",
@@ -219,13 +237,12 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   },
                 },
                 0,
-              )
-              ;
+              );
 
             // The copy and the veil deliberately do NOT ride the scrub. An
             // element whose opacity changes every frame on top of the video
-            // costs the video its fast compositing path, and that — not the
-            // decoding, the network or the engine — is the stutter that kept
+            // costs the video its fast compositing path, and that, not the
+            // decoding, the network or the engine, is the stutter that kept
             // moving around: it always sat exactly where this fade sat. So
             // the fade is one class toggle and a plain CSS transition, off
             // the per-frame path entirely.
@@ -241,20 +258,28 @@ export function useSiteMotion(deps: readonly unknown[]) {
           }
 
           if (nav && hero) {
+            // Past the hero the bar goes solid and the WhatsApp door opens;
+            // both are one class toggle each.
             ScrollTrigger.create({
               trigger: hero,
               start: "bottom top+=96",
-              onEnter: () => nav.classList.add("bhy-nav-solid"),
-              onLeaveBack: () => nav.classList.remove("bhy-nav-solid"),
+              onEnter: () => {
+                nav.classList.add("bhy-nav-solid");
+                whatsapp?.classList.add("bhy-wa-show");
+              },
+              onLeaveBack: () => {
+                nav.classList.remove("bhy-nav-solid");
+                whatsapp?.classList.remove("bhy-wa-show");
+              },
             });
             // Tuck the nav away while scrolling down, bring it back on the
-            // first upward movement — but never during the film: the logo is
+            // first upward movement, but never during the film: the logo is
             // meant to hold the corner for the whole hero.
             // The hero's height is measured on refresh and cached: reading
             // offsetHeight inside onUpdate forced a layout flush on every
             // scroll frame of the whole page, right after GSAP had written
-            // its transforms — layout thrashing, worst where the most tweens
-            // run at once (Services), which is exactly where it showed.
+            // its transforms (layout thrashing, worst where the most tweens
+            // run at once, which is exactly where it showed).
             let heroHeight = (hero as HTMLElement).offsetHeight;
             const measureHero = () => {
               heroHeight = (hero as HTMLElement).offsetHeight;
@@ -286,7 +311,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
 
           // Scroll-linked growth: the element enters slightly small and
           // grows to full size as it comes down the page (and shrinks back
-          // on the way up). Pure transform — the compositor plays it.
+          // on the way up). Pure transform, so the compositor plays it.
           document.querySelectorAll<HTMLElement>("[data-grow]").forEach((el) => {
             gsap.fromTo(
               el,
@@ -295,6 +320,19 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 scale: 1,
                 ease: "none",
                 scrollTrigger: { trigger: el, start: "top 96%", end: "top 30%", scrub: 0.9 },
+              },
+            );
+          });
+
+          // Hairlines draw themselves from the reading edge as they arrive.
+          document.querySelectorAll<HTMLElement>("[data-rule]").forEach((el) => {
+            gsap.fromTo(
+              el,
+              { scaleX: 0 },
+              {
+                scaleX: 1,
+                ease: "none",
+                scrollTrigger: { trigger: el, start: "top 96%", end: "top 62%", scrub: 0.9 },
               },
             );
           });
@@ -329,7 +367,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
 
           // The frame opens by easing its photograph back to rest inside a
           // fixed crop, not by animating clip-path: a clip-path tween cannot
-          // be composited, so it repainted the image on every scroll frame —
+          // be composited, so it repainted the image on every scroll frame,
           // the same repaint-per-frame cost that made the film hitch.
           document.querySelectorAll<HTMLElement>("[data-img-reveal]").forEach((el) => {
             const img = el.querySelector("img");
@@ -382,13 +420,19 @@ export function useSiteMotion(deps: readonly unknown[]) {
           });
         });
 
-        document.fonts?.ready.then(() => ScrollTrigger.refresh()).catch(() => {});
+        // Web fonts change every measurement; re-measure when they land,
+        // including the Arabic pair that arrives only after a language switch.
+        const onFonts = () => ScrollTrigger.refresh();
+        document.fonts?.ready.then(onFonts).catch(() => {});
+        document.fonts?.addEventListener("loadingdone", onFonts);
 
         cleanup = () => {
+          document.fonts?.removeEventListener("loadingdone", onFonts);
           filmCleanup();
           navCleanup();
           ctx.revert();
           gsap.ticker.remove(tick);
+          if (activeLenis === lenis) activeLenis = null;
           lenis.destroy();
         };
       })

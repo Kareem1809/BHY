@@ -1,8 +1,15 @@
 import { useState, type FormEvent } from "react";
 
 import { sendContactMessage } from "../../lib/api/contact.email";
-import type { Lang, SiteStrings } from "../../lib/i18n";
+import {
+  INSTAGRAM_HANDLE,
+  INSTAGRAM_URL,
+  type Lang,
+  type SiteStrings,
+  whatsappUrl,
+} from "../../lib/i18n";
 import { Arrow } from "./arrow";
+import { InstagramGlyph, WhatsAppGlyph } from "./glyphs";
 import { Words } from "./words";
 
 type Status = "idle" | "sending" | "success" | "error";
@@ -64,6 +71,40 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
           <p data-drift="36" className="mt-8 max-w-[40ch] text-base leading-relaxed text-[#6B5748]">
             {t.contact.body}
           </p>
+          {/* The two doors people actually use, beside the form rather than
+              buried in the footer. */}
+          <div data-drift="48" className="mt-12 flex flex-col gap-9">
+            <div>
+              <p className="max-w-[36ch] text-sm leading-relaxed text-[#6B5748]">
+                {t.contact.whatsappLead}
+              </p>
+              <a
+                href={whatsappUrl(t.contact.whatsappText)}
+                target="_blank"
+                rel="noreferrer"
+                className="bhy-cta-underline mt-4 text-[#3E2E23]"
+              >
+                <WhatsAppGlyph className="w-5" />
+                <span>{t.contact.whatsappCta}</span>
+              </a>
+            </div>
+            <div>
+              <p className="max-w-[36ch] text-sm leading-relaxed text-[#6B5748]">
+                {t.contact.instagramLead}
+              </p>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="bhy-cta-underline mt-4 text-[#3E2E23]"
+              >
+                <InstagramGlyph className="w-5" />
+                <span dir="ltr" className="font-latin text-lg tracking-[0.08em]">
+                  @{INSTAGRAM_HANDLE}
+                </span>
+              </a>
+            </div>
+          </div>
         </div>
         <form data-drift="48" className="md:col-span-7" onSubmit={onSubmit} noValidate>
           <div className="flex flex-col gap-9">
@@ -80,7 +121,13 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
               <label className="bhy-label" htmlFor="contact-name">
                 {t.contact.name}
               </label>
-              <input id="contact-name" name="name" type="text" className="bhy-input" />
+              <input
+                id="contact-name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                className="bhy-input"
+              />
               {errors.name ? <p className="bhy-error">{errors.name}</p> : null}
             </div>
             <div className="grid grid-cols-1 gap-9 sm:grid-cols-2">
@@ -88,14 +135,26 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
                 <label className="bhy-label" htmlFor="contact-phone">
                   {t.contact.phone}
                 </label>
-                <input id="contact-phone" name="phone" type="tel" className="bhy-input" />
+                <input
+                  id="contact-phone"
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  className="bhy-input"
+                />
                 {errors.phone ? <p className="bhy-error">{errors.phone}</p> : null}
               </div>
               <div className="bhy-field">
                 <label className="bhy-label" htmlFor="contact-email">
                   {t.contact.email}
                 </label>
-                <input id="contact-email" name="email" type="email" className="bhy-input" />
+                <input
+                  id="contact-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  className="bhy-input"
+                />
                 {errors.email ? <p className="bhy-error">{errors.email}</p> : null}
               </div>
             </div>
