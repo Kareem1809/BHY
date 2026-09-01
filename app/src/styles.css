@@ -645,10 +645,6 @@ html {
   overflow: hidden;
   vertical-align: top;
   padding-bottom: 0.09em;
-  margin-inline-end: 0.28em;
-}
-.bhy-w:last-child {
-  margin-inline-end: 0;
 }
 .bhy-w-inner {
   display: inline-block;
@@ -1033,4 +1029,34 @@ html.bhy-menu-open {
   background: var(--bhy-ink);
   color: var(--bhy-paper);
   transform: translateY(-3px);
+}
+
+/* The language switch also lives inside the phone menu: on a phone the bar
+   is the only place it appears, and a reader deep in the page should not
+   have to hunt for it. Sits on its own row above the contact links. */
+.bhy-menu-lang {
+  flex-basis: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  border: 1px solid rgba(245, 239, 230, 0.32);
+  border-radius: 9999px;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+.bhy-menu-lang:hover,
+.bhy-menu-lang:focus-visible {
+  background: var(--bhy-paper);
+  color: var(--bhy-ink);
+}
+/* A finger needs more than the text's own 26px. The padding grows the tap
+   target without moving the underline that draws the word. */
+@media (max-width: 767px) {
+  .bhy-lang {
+    padding: 0.625rem 0.25rem 0.375rem;
+  }
 }

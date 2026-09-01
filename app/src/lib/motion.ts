@@ -286,12 +286,21 @@ export function useSiteMotion(deps: readonly unknown[]) {
             };
             ScrollTrigger.addEventListener("refresh", measureHero);
             navCleanup = () => ScrollTrigger.removeEventListener("refresh", measureHero);
+            // Phones keep the bar: it is the only place the menu button and
+            // the language switch live, and a reader who stops mid-page was
+            // left with no way back to either of them. The tuck-away is a
+            // desktop flourish, where the pointer is always a flick from the
+            // top edge. matchMedia is read live, so a rotation follows suit.
+            const wide = window.matchMedia("(min-width: 768px)");
             ScrollTrigger.create({
               start: 0,
               end: "max",
               onUpdate: (self) => {
                 const pastHero = self.scroll() > heroHeight;
-                nav.classList.toggle("bhy-nav-hidden", pastHero && self.direction === 1);
+                nav.classList.toggle(
+                  "bhy-nav-hidden",
+                  wide.matches && pastHero && self.direction === 1,
+                );
               },
             });
           }

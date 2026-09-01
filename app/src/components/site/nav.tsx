@@ -120,6 +120,18 @@ export function SiteNav({ t, lang, onToggleLang }: NavProps) {
           </ol>
         </nav>
         <div className="bhy-menu-foot">
+          <button
+            type="button"
+            onClick={() => {
+              onToggleLang();
+              close();
+            }}
+            className="bhy-menu-lang"
+            lang={lang === "he" ? "ar" : "he"}
+            tabIndex={open ? 0 : -1}
+          >
+            {t.langToggle}
+          </button>
           <a
             href={INSTAGRAM_URL}
             target="_blank"
