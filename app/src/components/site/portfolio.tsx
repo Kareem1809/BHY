@@ -67,79 +67,173 @@ export function Portfolio({ t }: { t: SiteStrings }) {
     const big = frame.querySelector("img") as HTMLImageElement;
 
     let raf = 0;
+    let review = 0;
     let showing = false;
+    let wanted = "";
+    let pointerX = -1;
+    let pointerY = -1;
     let targetX = 0;
     let targetY = 0;
     let x = 0;
     let y = 0;
     let halfW = 0;
     let halfH = 0;
+    // Where the open frame sat, and the scroll it sat at. While the pointer
+    // is still inside it, nothing has to be looked up at all.
+    let hoverBox: DOMRect | null = null;
+    let hoverScroll = 0;
+    // Read in the scroll event, never inside the animation frame. Asking the
+    // window for scrollY between GSAP's transform writes forces a synchronous
+    // layout — the same thrash that once made the whole page hitch — and the
+    // scroll event is the one place where the value is already settled.
+    let scrolled = 0;
 
-    // The panel is measured only when the frame it shows changes shape, not
-    // on every move: the follow loop writes one transform and reads nothing.
+    // Measured only when the panel changes shape, never while it travels:
+    // the follow loop writes one transform and reads nothing.
     const measure = () => {
       halfW = frame.offsetWidth / 2 + 14;
       halfH = frame.offsetHeight / 2 + 14;
     };
-    const follow = () => {
+    const place = () => {
       const cx = Math.min(Math.max(targetX, halfW), window.innerWidth - halfW);
       const cy = Math.min(Math.max(targetY, halfH), window.innerHeight - halfH);
+      return [cx, cy];
+    };
+    const follow = () => {
+      const [cx, cy] = place();
       x += (cx - x) * 0.18;
       y += (cy - y) * 0.18;
       panel.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
       raf = requestAnimationFrame(follow);
     };
     const hide = () => {
+      wanted = "";
       if (!showing) return;
       showing = false;
       panel.classList.remove("bhy-zoom--on");
       cancelAnimationFrame(raf);
       raf = 0;
     };
-    const onMove = (event: PointerEvent) => {
-      const figure = (event.target as HTMLElement).closest<HTMLElement>("[data-zoom]");
+    const show = () => {
+      if (showing) return;
+      showing = true;
+      if (!halfW) measure();
+      [x, y] = place();
+      panel.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      panel.classList.add("bhy-zoom--on");
+      raf = requestAnimationFrame(follow);
+    };
+
+    // The print is decoded BEFORE the panel opens. Swapping the source and
+    // revealing in the same frame left the browser decoding a 1600px
+    // photograph while the entrance was already running, and the opening
+    // visibly caught on it. Decoded first, the entrance has nothing to do
+    // but move. The section's own preloader means this is usually instant.
+    const open = (figure: HTMLElement) => {
+      const src = figure.dataset.zoom ?? "";
+      hoverBox = figure.getBoundingClientRect();
+      scrolled = window.scrollY;
+      hoverScroll = scrolled;
+      if (wanted === src) {
+        show();
+        return;
+      }
+      wanted = src;
+      const source = figure.querySelector("img") as HTMLImageElement | null;
+      const ratio =
+        source && source.naturalHeight ? source.naturalWidth / source.naturalHeight : 1.5;
+      const next = new Image();
+      next.src = src;
+      const settle = () => {
+        if (wanted !== src) return;
+        big.src = src;
+        frame.style.setProperty("--bhy-zoom-ar", String(ratio));
+        measure();
+        show();
+      };
+      next.decode().then(settle, settle);
+    };
+
+    const at = (clientX: number, clientY: number) => {
+      const el = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+      const figure = el?.closest<HTMLElement>("[data-zoom]") ?? null;
       // only the slide on stage, never the ones waiting behind it
       if (!figure || figure.closest(".bhy-slide--idle, .bhy-slide--leaving")) {
+        hoverBox = null;
         hide();
         return;
       }
-      const src = figure.dataset.zoom ?? "";
-      if (big.getAttribute("src") !== src) {
-        big.src = src;
-        const source = figure.querySelector("img") as HTMLImageElement | null;
-        const ratio =
-          source && source.naturalHeight ? source.naturalWidth / source.naturalHeight : 1.5;
-        frame.style.setProperty("--bhy-zoom-ar", String(ratio));
-        measure();
-      }
-      targetX = event.clientX;
-      targetY = event.clientY;
-      if (!showing) {
-        showing = true;
-        if (!halfW) measure();
-        x = Math.min(Math.max(targetX, halfW), window.innerWidth - halfW);
-        y = Math.min(Math.max(targetY, halfH), window.innerHeight - halfH);
-        panel.classList.add("bhy-zoom--on");
-        raf = requestAnimationFrame(follow);
-      }
+      open(figure);
     };
 
-    root.addEventListener("pointermove", onMove);
+    // Asking the document what is under the pointer costs a hit test, and
+    // doing it on every scroll frame cost 10 frames of 371 on a parked
+    // pointer. The open frame's box is remembered instead, and the scroll it
+    // was measured at: while the pointer is still inside that box — shifted
+    // by however far the page has travelled since — there is nothing to look
+    // up, and the check is arithmetic. Only when it leaves does one real
+    // hit test run.
+    const stillOnIt = () => {
+      if (!hoverBox) return false;
+      const top = hoverBox.top - (scrolled - hoverScroll);
+      return (
+        pointerX >= hoverBox.left &&
+        pointerX <= hoverBox.right &&
+        pointerY >= top &&
+        pointerY <= top + hoverBox.height
+      );
+    };
+    const onPointer = (event: PointerEvent) => {
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      targetX = pointerX;
+      targetY = pointerY;
+      if (showing && stillOnIt()) return;
+      at(pointerX, pointerY);
+    };
+    // What sits under a still pointer changes on its own: the page scrolls,
+    // or the reader clicks through to the next project. Listening for the
+    // pointer alone left them waving the mouse to wake the preview up.
+    const lookAgain = () => {
+      review = 0;
+      if (pointerX < 0) return;
+      if (showing && stillOnIt()) return;
+      at(pointerX, pointerY);
+    };
+    const onScroll = () => {
+      scrolled = window.scrollY;
+      if (!review) review = requestAnimationFrame(lookAgain);
+    };
+    // A click or a slide finishing its entrance changes the DOM under a
+    // pointer that has not moved: the remembered box is meaningless then.
+    const onChange = () => {
+      hoverBox = null;
+      if (!review) review = requestAnimationFrame(lookAgain);
+    };
+
+    root.addEventListener("pointermove", onPointer);
+    root.addEventListener("pointerover", onPointer);
     root.addEventListener("pointerleave", hide);
-    // the frame under the pointer changes without the pointer moving
-    window.addEventListener("scroll", hide, { passive: true });
+    root.addEventListener("click", onChange);
+    root.addEventListener("animationend", onChange);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onChange);
     return () => {
-      root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointermove", onPointer);
+      root.removeEventListener("pointerover", onPointer);
       root.removeEventListener("pointerleave", hide);
-      window.removeEventListener("scroll", hide);
+      root.removeEventListener("click", onChange);
+      root.removeEventListener("animationend", onChange);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onChange);
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(review);
     };
   }, []);
 
   const count = t.portfolio.slides.length;
 
   const go = (n: number) => {
-    zoom.current?.classList.remove("bhy-zoom--on");
     window.clearTimeout(leaveTimer.current);
     setLeaving(index);
     setIndex(((n % count) + count) % count);

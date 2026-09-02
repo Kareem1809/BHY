@@ -1132,8 +1132,11 @@ html.bhy-menu-open {
   width: max-content;
   z-index: 46;
   pointer-events: none;
+  /* The whole entrance, and nothing else. A scale on the way in showed the
+     photograph a few percent cropped before it settled, and the picture is
+     the entire point of this panel: it is never anything but complete. */
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.26s ease;
 }
 .bhy-zoom-frame {
   /* The box takes the photograph's OWN proportions, never a crop of them.
@@ -1149,8 +1152,11 @@ html.bhy-menu-open {
   box-shadow:
     0 2px 0 rgba(245, 239, 230, 0.5) inset,
     0 40px 90px -34px rgba(20, 12, 6, 0.7);
-  transform: translate(-50%, -50%) scale(0.94);
-  transition: transform 0.42s cubic-bezier(0.05, 0.7, 0.1, 1);
+  /* Static, deliberately. Scaling THIS element on the way in meant the
+     browser re-rasterising a 90px shadow on every frame of the entrance,
+     which is exactly the catch you feel as it opens. The photograph inside
+     does the moving instead, clipped by this frame. */
+  transform: translate(-50%, -50%);
 }
 .bhy-zoom img {
   display: block;
@@ -1160,9 +1166,6 @@ html.bhy-menu-open {
 }
 .bhy-zoom--on {
   opacity: 1;
-}
-.bhy-zoom--on .bhy-zoom-frame {
-  transform: translate(-50%, -50%) scale(1);
 }
 /* A finger has no hover: on a phone this would only ever be in the way. */
 @media (hover: none), (pointer: coarse) {
