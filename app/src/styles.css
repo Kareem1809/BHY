@@ -1136,9 +1136,14 @@ html.bhy-menu-open {
   transition: opacity 0.3s ease;
 }
 .bhy-zoom-frame {
-  height: min(64vh, 660px);
-  aspect-ratio: var(--bhy-zoom-ar, 1.5);
-  max-width: 48vw;
+  /* The box takes the photograph's OWN proportions, never a crop of them.
+     A fixed height with a max-width was capping the wide frames on their
+     width alone, so a 16:9 room came back as a tall square with its sides
+     cut off. Both terms are derived from the same ratio here, so whichever
+     one binds, the other follows and the whole picture is inside. */
+  --bhy-zoom-ar: 1.5;
+  width: min(76vw, calc(76vh * var(--bhy-zoom-ar)));
+  height: min(76vh, calc(76vw / var(--bhy-zoom-ar)));
   overflow: hidden;
   background: var(--bhy-panel);
   box-shadow:
