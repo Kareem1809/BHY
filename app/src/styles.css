@@ -1115,3 +1115,58 @@ html.bhy-menu-open {
     padding: 0.625rem 0.25rem 0.375rem;
   }
 }
+
+/* ================= the enlargement on hover =================
+   Hovering any frame in the projects section floats the FULL print of that
+   same photograph beside the pointer — the real file, not a scaled-up
+   thumbnail. The outer element is the one the follow loop moves, so a frame
+   costs exactly one transform; the inner one owns the size, the entrance and
+   the shadow, and is never touched while the pointer travels. */
+.bhy-zoom {
+  position: fixed;
+  top: 0;
+  /* PHYSICAL left, deliberately: the follow loop writes viewport coordinates
+     straight from the pointer, and on this RTL page `inset-inline-start`
+     anchored the panel to the right edge — every preview flew off screen. */
+  left: 0;
+  width: max-content;
+  z-index: 46;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.bhy-zoom-frame {
+  height: min(64vh, 660px);
+  aspect-ratio: var(--bhy-zoom-ar, 1.5);
+  max-width: 48vw;
+  overflow: hidden;
+  background: var(--bhy-panel);
+  box-shadow:
+    0 2px 0 rgba(245, 239, 230, 0.5) inset,
+    0 40px 90px -34px rgba(20, 12, 6, 0.7);
+  transform: translate(-50%, -50%) scale(0.94);
+  transition: transform 0.42s cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+.bhy-zoom img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.bhy-zoom--on {
+  opacity: 1;
+}
+.bhy-zoom--on .bhy-zoom-frame {
+  transform: translate(-50%, -50%) scale(1);
+}
+/* A finger has no hover: on a phone this would only ever be in the way. */
+@media (hover: none), (pointer: coarse) {
+  .bhy-zoom {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bhy-zoom {
+    display: none;
+  }
+}
