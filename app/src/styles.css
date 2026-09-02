@@ -229,11 +229,16 @@ html {
    only masthead this page has, so it never tucks away. */
 .bhy-nav-strip {
   position: relative;
-  height: clamp(4.5rem, min(13vw, 22vh), 15rem);
+  /* Every term is the original height times 1.25: the lockup keeps its 82%
+     share of the strip, so growing the strip IS growing the logo, and it
+     grows by the same quarter on a phone as on a desktop. The strip has to
+     grow with it — the ink twin is clipped to this box, and a lockup hanging
+     out of it would lose its bottom half to the clip. */
+  height: clamp(5.625rem, min(16.25vw, 27.5vh), 18.75rem);
   transition: height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .bhy-nav-solid .bhy-nav-strip {
-  height: clamp(3.75rem, min(7vw, 14vh), 9rem);
+  height: clamp(4.6875rem, min(8.75vw, 17.5vh), 11.25rem);
 }
 .bhy-nav-row {
   position: absolute;
