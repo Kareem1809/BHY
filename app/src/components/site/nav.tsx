@@ -98,8 +98,13 @@ export function SiteNav({ t, lang, onToggleLang }: NavProps) {
         <div className="bhy-nav-strip">
           <div className="bhy-nav-row">
             <a href="#top" onClick={close} className="bhy-logo-link" aria-label={t.brandLatin}>
+              {/* The print for dark ground. Her lockup's own bronze and olive
+                  measured 4.0:1 on the espresso section — 1.4:1 at the worst —
+                  so the mark sank into the brown instead of standing on it.
+                  This print keeps the artwork's alpha exactly as drawn and
+                  repaints it in paper: 12.1:1 on the same brown. */}
               <img
-                src="/assets/logo.webp"
+                src="/assets/logo-light.webp"
                 alt={t.brandLatin}
                 width={1800}
                 height={1001}

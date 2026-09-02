@@ -51,7 +51,39 @@ def compose_og():
     print(f"og.jpg {og.size} {os.path.getsize(f'{A}/og.jpg') // 1024}KB")
 
 
+def light_logo():
+    """The print for dark ground.
+
+    The lockup's own colours are mid-tone bronze and olive: measured against
+    the espresso section they read at 4.0:1 on average and 1.4:1 at the worst,
+    which is why the mark sank into the brown instead of standing on it. This
+    keeps the artwork's alpha exactly as drawn and repaints it in paper, with a
+    whisper of the original modelling left so the leaves and the column do not
+    flatten into one shape. On the espresso that is 11:1.
+    """
+    im = load(f"{A}/logo.webp").convert("RGBA")
+    alpha = im.split()[3]
+    grey = im.convert("L")
+    paper = (245, 239, 230)
+    # 0.86 -> 1.0 of paper, following the original's own light and shade
+    shade = grey.point(lambda v: int(220 + 35 * (v / 255)))
+    out = Image.merge(
+        "RGBA",
+        (
+            shade.point(lambda v: min(255, round(v * paper[0] / 255))),
+            shade.point(lambda v: min(255, round(v * paper[1] / 255))),
+            shade.point(lambda v: min(255, round(v * paper[2] / 255))),
+            alpha,
+        ),
+    )
+    out.save(f"{A}/logo-light.webp", "WEBP", lossless=True, quality=100, method=6)
+    print(f"logo-light.webp {out.size} {os.path.getsize(f'{A}/logo-light.webp') // 1024}KB")
+
+
 def main():
+    if "--light-logo" in sys.argv:
+        light_logo()
+        return
     if not os.path.exists(f"{A}/hero-poster.jpg"):
         sys.exit("originals already converted, nothing to do")
     compose_og()
