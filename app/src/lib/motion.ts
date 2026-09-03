@@ -27,7 +27,7 @@ export function lockScroll(locked: boolean) {
 // opacity). Under prefers-reduced-motion only the functional nav state runs.
 export function useSiteMotion(deps: readonly unknown[]) {
   useEffect(() => {
-    const nav = document.querySelector("[data-site-nav]");
+    const nav = document.querySelector<HTMLElement>("[data-site-nav]");
     const whatsapp = document.querySelector("[data-whatsapp]");
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -289,6 +289,97 @@ export function useSiteMotion(deps: readonly unknown[]) {
               let stripHeight = 0;
               let lastClip = "";
               let lastOnFilm: boolean | null = null;
+              // Over the film the words have no fixed ground: they open on
+              // dark wood and by a quarter of the way through they are on a lit
+              // ceiling. So they ask the picture itself what they are standing
+              // on, and print themselves accordingly — a 24x6 canvas takes the
+              // patch of video under them and counts how much of it is dark.
+              //
+              // ONLY WHEN EVERYTHING HAS STOPPED. Reading pixels back from a
+              // video texture stalls the pipeline: sampling ten times a second
+              // cost every single frame of a full read of the page (237 of 237
+              // over 24ms, a p99 of 35). Debounced behind the scroll and behind
+              // the playhead's own seeks, it costs nothing while anything is
+              // moving, and lands on the frame the reader actually stopped on.
+              // Measuring the FILE instead would have been cheaper and wrong:
+              // object-fit: cover crops the sides, so the dark corner the file
+              // ends on is off screen at this width.
+              //
+              // 127 is where the two prints are equally legible: ink is
+              // #3E2E23 (L 0.029), paper is #F5EFE6 (L 0.85), and the contrast
+              // curves cross where the ground's luminance is 0.217.
+              //
+              // What is counted is the SHARE of the patch darker than that,
+              // not its average, and the gap between the two thresholds is what
+              // keeps a patch sitting near the line from flickering.
+              //
+              // Only the words are read this way. The mark's box ends the film
+              // half over a bright ceiling and half over a dark cabinet, and no
+              // single number for that box is honest: by average or by majority
+              // it reads "dark" and would print her lockup in paper over a lit
+              // wall, which is worse than the ink it replaces. Her mark keeps
+              // the ink print over the film, where the ceiling behind it is
+              // light at both ends of the scrub.
+              const CROSSOVER = 127;
+              let wordsInk = true;
+              const inked = (was: boolean, darkShare: number) =>
+                was ? darkShare < 0.6 : darkShare < 0.4;
+
+              const film = document.querySelector<HTMLVideoElement>("[data-hero-film]");
+              const poster = document.querySelector<HTMLImageElement>(".bhy-hero-img img");
+              const probe = document.createElement("canvas");
+              probe.width = 24;
+              probe.height = 6;
+              const ink = probe.getContext("2d", { willReadFrequently: true });
+              const wordsEl = cut.querySelector<HTMLElement>(".bhy-nav-controls");
+
+              // The luminance of the film under one box, in the film's own
+              // pixels. The blob is same-origin, so the canvas stays readable.
+              const groundUnder = (box: DOMRect, stage: DOMRect) => {
+                // The poster is the film's own first frame, and it is there
+                // before the clip is: at the top of the page, where the words
+                // open on dark wood, it is the only thing to read.
+                const shown =
+                  film && film.readyState >= 2 && film.videoWidth
+                    ? { src: film as CanvasImageSource, w: film.videoWidth, h: film.videoHeight }
+                    : poster && poster.naturalWidth
+                      ? { src: poster as CanvasImageSource, w: poster.naturalWidth, h: poster.naturalHeight }
+                      : null;
+                if (!ink || !shown) return null;
+                const scale = Math.max(stage.width / shown.w, stage.height / shown.h);
+                const offX = stage.left + (stage.width - shown.w * scale) / 2;
+                const offY = stage.top + (stage.height - shown.h * scale) / 2;
+                const sx = Math.max((box.left - offX) / scale, 0);
+                const sy = Math.max((box.top - offY) / scale, 0);
+                const sw = Math.min(box.width / scale, shown.w - sx);
+                const sh = Math.min(box.height / scale, shown.h - sy);
+                if (sw < 1 || sh < 1) return null;
+                try {
+                  ink.drawImage(shown.src, sx, sy, sw, sh, 0, 0, probe.width, probe.height);
+                  const { data } = ink.getImageData(0, 0, probe.width, probe.height);
+                  let dark = 0;
+                  for (let i = 0; i < data.length; i += 4) {
+                    const y = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                    if (y < CROSSOVER) dark += 1;
+                  }
+                  return dark / (data.length / 4);
+                } catch {
+                  return null;
+                }
+              };
+
+              const readFilm = () => {
+                if (!film || !wordsEl) return;
+                const stage = film.getBoundingClientRect();
+                if (stage.height < 1) return;
+                const share = groundUnder(wordsEl.getBoundingClientRect(), stage);
+                if (share !== null) setWords(inked(wordsInk, share));
+              };
+              const setWords = (on: boolean) => {
+                if (on === wordsInk) return;
+                wordsInk = on;
+                nav.style.setProperty("--bhy-ink-words", on ? "1" : "0");
+              };
 
               const measureBands = () => {
                 bands = Array.from(document.querySelectorAll<HTMLElement>("[data-band]"))
@@ -335,7 +426,45 @@ export function useSiteMotion(deps: readonly unknown[]) {
                   nav.classList.toggle("bhy-nav-onfilm", onFilm);
                   lastOnFilm = onFilm;
                 }
+
+                // Only while the whole strip is inside the film. The moment it
+                // straddles the hero's bottom edge the clip above is telling
+                // the truth again, and these two must get out of its way.
+                // The playhead glides toward the scroll for about a second
+                // after the scrolling stops, so one reading at scroll time
+                // would be of the frame BEFORE the one that lands. While the
+                // strip is over the film a slow watch keeps looking; away from
+                // it nothing runs at all.
+                if (top.film && bottom.film) {
+                  watchFilm();
+                } else {
+                  unwatchFilm();
+                  setWords(true);
+                }
               };
+
+              let pending = 0;
+              let onFilmNow = false;
+              const scheduleRead = () => {
+                window.clearTimeout(pending);
+                pending = window.setTimeout(readFilm, 180);
+              };
+              const watchFilm = () => {
+                onFilmNow = true;
+                scheduleRead();
+              };
+              const unwatchFilm = () => {
+                onFilmNow = false;
+                window.clearTimeout(pending);
+                pending = 0;
+              };
+              // The playhead keeps gliding for about a second after the scroll
+              // stops, so the last seek — not the last scroll — is the moment
+              // the picture finally holds still.
+              const onSeeked = () => {
+                if (onFilmNow) scheduleRead();
+              };
+              film?.addEventListener("seeked", onSeeked);
 
               let lastScroll = 0;
               measureBands();
@@ -357,6 +486,8 @@ export function useSiteMotion(deps: readonly unknown[]) {
               watchStrip.observe(strip);
               navCleanup = () => {
                 watchStrip.disconnect();
+                unwatchFilm();
+                film?.removeEventListener("seeked", onSeeked);
                 ScrollTrigger.removeEventListener("refresh", remeasure);
               };
               ScrollTrigger.create({

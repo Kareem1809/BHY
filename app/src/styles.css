@@ -281,6 +281,14 @@ html {
 .bhy-nav-cut .bhy-nav-row {
   color: var(--bhy-ink);
 }
+/* The ink print of the words can be taken away on its own, which is what the
+   film needs: they cross grounds the mark never does. Everywhere else the var
+   is 1 and the clip above is the only thing deciding anything. The fade is
+   what stops the change of print reading as a flicker. */
+.bhy-nav-cut .bhy-nav-controls {
+  opacity: var(--bhy-ink-words, 1);
+  transition: opacity 0.35s ease;
+}
 .bhy-nav-cut .bhy-nav-row > * {
   pointer-events: none;
 }
