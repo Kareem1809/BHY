@@ -1,5 +1,4 @@
 import { makerWhatsappUrl, type SiteStrings } from "../../lib/i18n";
-import { pic } from "../../lib/images";
 import { Arrow } from "./arrow";
 
 export function Footer({ t }: { t: SiteStrings }) {
@@ -76,10 +75,11 @@ export function Footer({ t }: { t: SiteStrings }) {
       <div className="border-t border-[#3E2E23]/15">
         <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-4 px-6 py-6 text-sm text-[#6B5748]">
           <span>{t.footer.rights}</span>
-          {/* Who built it. The lockup came as a mockup on a dark wall, so it
-              keeps that ground and sits as a small badge rather than pretending
-              to be artwork with an alpha channel. The link is SITENA's own
-              WhatsApp, and it opens with the message already written. */}
+          {/* Who built it. Their lockup is lifted off the dark wall it was
+              photographed on (tools/images.py --sitena) and carried here as a
+              mask, so the footer paints it in its own ink and it belongs to the
+              page instead of sitting on it. The link is SITENA's own WhatsApp,
+              and it opens with the message already written. */}
           <a
             href={makerWhatsappUrl(t.footer.builtByText)}
             target="_blank"
@@ -88,16 +88,7 @@ export function Footer({ t }: { t: SiteStrings }) {
             aria-label={`${t.footer.builtBy} — SITENA`}
           >
             <span className="bhy-maker-label">{t.footer.builtBy}</span>
-            <img
-              {...pic("/assets/sitena", 900)}
-              sizes="(min-width: 768px) 168px, 140px"
-              alt="SITENA — building technology solutions"
-              width={900}
-              height={387}
-              loading="lazy"
-              decoding="async"
-              className="bhy-maker-mark"
-            />
+            <span aria-hidden="true" className="bhy-maker-mark" />
           </a>
           <span dir="ltr" className="font-latin tracking-[0.18em] text-[#94553A]">
             {t.taglineLatin}

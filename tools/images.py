@@ -181,18 +181,34 @@ def icons():
 
 # ------------------------------------------------------------ the maker's mark
 # SITENA built this site, and the footer credits them. What Kareem sent is a
-# mockup — the lockup photographed on a dark wall — so the badge keeps that
-# ground rather than pretending the artwork has an alpha channel it does not.
+# mockup — the lockup photographed on a dark wall — and dropping that dark card
+# into an ivory footer looked exactly like what it was: a sticker.
+#
+# So the artwork is lifted off its wall instead. The wall is a smooth gradient,
+# so subtracting a heavily blurred copy of the image from itself leaves only the
+# strokes; what is left becomes an alpha mask, and the footer paints it in its
+# own ink through `currentColor`. One file, any size, any colour — and the mark
+# reads as part of the page rather than pasted onto it.
 SITENA_SRC = os.path.expanduser("~/Downloads/image-1788459329574.webp")
-SITENA_CROP = (290, 230, 1720, 845)
+SITENA_CROP = (285, 195, 1760, 900)
 
 
 def sitena():
-    im = load(SITENA_SRC).convert("RGB").crop(SITENA_CROP)
-    for name, width, q in (("sitena", 900, 86), ("sitena-sm", 460, 84)):
-        out = fit_width(im, width)
-        out.save(f"{A}/{name}.webp", "WEBP", quality=q, method=6)
-        print(f"{name:22s} {out.width}x{out.height}  {os.path.getsize(f'{A}/{name}.webp') // 1024}KB")
+    from PIL import ImageChops, ImageFilter
+
+    art = load(SITENA_SRC).convert("RGB").crop(SITENA_CROP)
+    grey = art.convert("L")
+    lift = ImageChops.subtract(grey, grey.filter(ImageFilter.GaussianBlur(28)))
+    # 12 is the wall's own noise; 70 above it is a fully drawn stroke
+    mask = lift.point(lambda v: 0 if v < 12 else min(255, int((v - 12) * 255 / 70)))
+    shape = Image.new("RGBA", art.size, (255, 255, 255, 0))
+    shape.putalpha(mask)
+    shape = shape.crop(shape.getbbox())
+    shape = fit_width(shape, 1200)
+    shape.save(f"{A}/sitena.webp", "WEBP", quality=90, method=6, exact=True)
+    size = os.path.getsize(f"{A}/sitena.webp")
+    print(f"{'sitena.webp':22s} {shape.width}x{shape.height}  {size // 1024}KB  (alpha mask)")
+    print(f"{'':22s} aspect-ratio for the CSS: {shape.width / shape.height:.3f}")
 
 
 if __name__ == "__main__":
