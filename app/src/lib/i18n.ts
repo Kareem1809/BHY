@@ -290,8 +290,8 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       "تنسيق",
       "إشراف ومتابعة",
       "خامة",
-      "المعنى",
-      "الأجواء",
+      "معنى",
+      "أجواء",
     ],
     portfolio: {
       eyebrow: "مشاريعنا",
