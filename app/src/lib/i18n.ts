@@ -87,6 +87,13 @@ const WHATSAPP_URL = `https://wa.me/${PHONE_INTL}`;
 // The chat opens with a greeting already typed, in the reader's language.
 export const whatsappUrl = (text: string) => `${WHATSAPP_URL}?text=${encodeURIComponent(text)}`;
 
+// The message every WhatsApp link opens with. Written once per language: the
+// footer's link used to be the bare number while the floating button and the
+// contact panel carried this sentence, so the same site said hello in two
+// different ways depending on which door you came through.
+const HELLO_HE = "שלום בסמה, הגעתי דרך האתר ואשמח לשוחח על פרויקט.";
+const HELLO_AR = "مرحباً بسمة، وصلت من خلال الموقع وأحب أن نتحدث عن مشروع.";
+
 // SITENA built this site. Their credit in the footer opens their WhatsApp, not
 // hers — a different company, a different number, kept apart on purpose so no
 // edit to the studio's contact details can ever reroute an enquiry meant for
@@ -229,7 +236,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       invalidEmail: "כתובת אימייל לא תקינה",
       whatsappLead: "מעדיפים לכתוב? שלחו לנו הודעה בוואטסאפ ונחזור אליכם.",
       whatsappCta: "לשיחה בוואטסאפ",
-      whatsappText: "שלום בסמה, הגעתי דרך האתר ואשמח לשוחח על פרויקט.",
+      whatsappText: HELLO_HE,
       instagramLead: "פרויקטים חדשים מתפרסמים קודם באינסטגרם",
     },
     footer: {
@@ -237,7 +244,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       follow: "עקבו אחרינו",
       socials: [
         { label: "אינסטגרם", href: INSTAGRAM_URL },
-        { label: "וואטסאפ", href: WHATSAPP_URL },
+        { label: "וואטסאפ", href: whatsappUrl(HELLO_HE) },
         { label: EMAIL_ADDRESS, href: `mailto:${EMAIL_ADDRESS}` },
       ],
       rights: "© 2026 בסמה חאג' יחיא. כל הזכויות שמורות.",
@@ -385,7 +392,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       invalidEmail: "بريد إلكتروني غير صالح",
       whatsappLead: "تفضلون الكتابة؟ ابعثوا لنا رسالة واتساب ونعود إليكم.",
       whatsappCta: "حديث عبر واتساب",
-      whatsappText: "مرحباً بسمة، وصلت من خلال الموقع وأحب أن نتحدث عن مشروع.",
+      whatsappText: HELLO_AR,
       instagramLead: "المشاريع الجديدة تُنشر أولاً على إنستغرام",
     },
     footer: {
@@ -393,7 +400,7 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       follow: "تابعونا",
       socials: [
         { label: "إنستغرام", href: INSTAGRAM_URL },
-        { label: "واتساب", href: WHATSAPP_URL },
+        { label: "واتساب", href: whatsappUrl(HELLO_AR) },
         { label: EMAIL_ADDRESS, href: `mailto:${EMAIL_ADDRESS}` },
       ],
       rights: "© 2026 بسمة حاج يحيى. جميع الحقوق محفوظة.",
