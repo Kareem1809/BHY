@@ -1,0 +1,4 @@
+# One page, client-side routing: any address that is not a real file is the
+# site itself, which then shows its own not-found panel. Real files (the
+# assets, robots.txt, sitemap.xml) are served before this ever applies.
+/*  /index.html  200

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://basma-haj-yahia.vercel.app/sitemap.xml
+Sitemap: https://basmahaj.com/sitemap.xml

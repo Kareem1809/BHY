@@ -73,7 +73,7 @@ export type SiteStrings = {
 
 // One definition per destination. The language blocks below only carry
 // labels, so a URL can never drift between Hebrew and Arabic.
-export const SITE_URL = "https://basma-haj-yahia.vercel.app";
+export const SITE_URL = "https://basmahaj.com";
 export const INSTAGRAM_HANDLE = "bhy__design";
 export const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_HANDLE}`;
 export const EMAIL_ADDRESS = "basmahaj99@gmail.com";
