@@ -292,6 +292,15 @@ html {
   display: block;
   flex: none;
   height: 82%;
+  transition: opacity 0.35s ease;
+}
+/* Phones only: the footer prints the lockup at full width, and on a screen
+   this narrow the floating one sits directly over it. One mark per screen. */
+@media (max-width: 767px) {
+  .bhy-logo-yield .bhy-logo-link {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 .bhy-logo {
   display: block;

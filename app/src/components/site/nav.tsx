@@ -89,6 +89,27 @@ export function SiteNav({ t, lang, onToggleLang }: NavProps) {
     [],
   );
 
+  // At the foot of the page her lockup is printed large, and on a phone the
+  // floating one lands right on top of it — the same mark twice on one screen.
+  // So the floating one steps aside while the printed one is in view. Only the
+  // class is set here; whether it means anything is the stylesheet's call, and
+  // there it is a phone-width rule.
+  useEffect(() => {
+    const printed = document.querySelector("[data-footer-logo]");
+    if (!printed) return;
+    const watch = new IntersectionObserver(
+      ([entry]) => {
+        document.documentElement.classList.toggle("bhy-logo-yield", entry.isIntersecting);
+      },
+      { rootMargin: "-8% 0px 0px 0px" },
+    );
+    watch.observe(printed);
+    return () => {
+      watch.disconnect();
+      document.documentElement.classList.remove("bhy-logo-yield");
+    };
+  }, []);
+
   return (
     <>
       {/* No bar: the lockup and the links float on the page itself, on

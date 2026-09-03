@@ -19,6 +19,7 @@ export function Footer({ t }: { t: SiteStrings }) {
             and a deeper bronze, baked into the file, no runtime filters. */}
         <img
           data-drift="24"
+          data-footer-logo
           src="/assets/footer-logo.webp"
           alt="Basma Haj Yahia, architecture & interior design"
           width={1800}
