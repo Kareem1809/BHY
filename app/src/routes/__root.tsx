@@ -62,6 +62,21 @@ function buildHead() {
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
     ],
+    scripts: [
+      {
+        // Every deploy gives the stylesheet a new name. A browser holding an
+        // older copy of this page asks for the old name, is told the file is
+        // gone, and renders the site as raw HTML — no styling at all, and
+        // nothing in the console to say why. So the page checks, once, that
+        // its own stylesheet actually arrived, and if it did not it fetches
+        // itself again. The session flag means it can only ever do that once.
+        children:
+          "addEventListener('load',function(){try{var k='bhy-stale',ok=false,s=document.styleSheets;" +
+          "for(var i=0;i<s.length;i++){if(s[i].href&&s[i].href.indexOf('/assets/')>-1){ok=true;break}}" +
+          "if(ok){sessionStorage.removeItem(k);return}if(sessionStorage.getItem(k))return;" +
+          "sessionStorage.setItem(k,'1');location.reload()}catch(e){}})",
+      },
+    ],
   };
 }
 
