@@ -1147,10 +1147,11 @@ html.bhy-menu-open {
   transition: opacity 0.22s ease;
 }
 .bhy-loupe-eye {
-  --bhy-loupe: clamp(11.25rem, 17vw, 15rem);
+  /* A starting size only: the real diameter is cut to the frame under the
+     pointer, in zoom.tsx, so the glass is never wider than its own picture. */
   position: relative;
-  width: var(--bhy-loupe);
-  height: var(--bhy-loupe);
+  width: 15rem;
+  height: 15rem;
   overflow: hidden;
   border-radius: 50%;
   background: var(--bhy-panel);

@@ -112,7 +112,17 @@ export function Zoom({ t }: { t: SiteStrings }) {
     // the pointer. Worked out once per opening, never while it travels.
     const fit = () => {
       if (!hoverBox) return;
-      glass = eye.offsetWidth;
+      // The glass is cut to the frame it sits on. A single fixed diameter was
+      // wider than the small frames themselves — the four steps of the process
+      // are 160px on screen — so a round window bigger than its own picture
+      // hung off every side of it. Seven tenths of the frame's shorter side,
+      // held between a glass worth looking through and one that would swallow
+      // the hero.
+      glass = Math.round(
+        Math.min(Math.max(Math.min(hoverBox.width, hoverBox.height) * 0.7, 104), 260),
+      );
+      eye.style.width = `${glass}px`;
+      eye.style.height = `${glass}px`;
       const w = hoverBox.width * ZOOM;
       const h = hoverBox.height * ZOOM;
       if (ratio > w / h) {
