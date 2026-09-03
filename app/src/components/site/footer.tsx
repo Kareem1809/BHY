@@ -76,10 +76,9 @@ export function Footer({ t }: { t: SiteStrings }) {
         <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-4 px-6 py-6 text-sm text-[#6B5748]">
           <span>{t.footer.rights}</span>
           {/* Who built it. Their lockup is lifted off the dark wall it was
-              photographed on (tools/images.py --sitena) and carried here as a
-              mask, so the footer paints it in its own ink and it belongs to the
-              page instead of sitting on it. The link is SITENA's own WhatsApp,
-              and it opens with the message already written. */}
+              photographed on and keeps its own blue and bronze — no card, no
+              ground, nothing behind it (tools/images.py --sitena). The link is
+              SITENA's own WhatsApp, and it opens with the message written. */}
           <a
             href={makerWhatsappUrl(t.footer.builtByText)}
             target="_blank"
@@ -88,7 +87,15 @@ export function Footer({ t }: { t: SiteStrings }) {
             aria-label={`${t.footer.builtBy} — SITENA`}
           >
             <span className="bhy-maker-label">{t.footer.builtBy}</span>
-            <span aria-hidden="true" className="bhy-maker-mark" />
+            <img
+              src="/assets/sitena.webp"
+              alt="SITENA — building technology solutions"
+              width={600}
+              height={262}
+              loading="lazy"
+              decoding="async"
+              className="bhy-maker-mark"
+            />
           </a>
           <span dir="ltr" className="font-latin tracking-[0.18em] text-[#94553A]">
             {t.taglineLatin}

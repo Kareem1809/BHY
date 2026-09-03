@@ -184,11 +184,15 @@ def icons():
 # mockup — the lockup photographed on a dark wall — and dropping that dark card
 # into an ivory footer looked exactly like what it was: a sticker.
 #
-# So the artwork is lifted off its wall instead. The wall is a smooth gradient,
-# so subtracting a heavily blurred copy of the image from itself leaves only the
-# strokes; what is left becomes an alpha mask, and the footer paints it in its
-# own ink through `currentColor`. One file, any size, any colour — and the mark
-# reads as part of the page rather than pasted onto it.
+# So the artwork is lifted off its wall in its own colours. The wall is dark,
+# smooth and almost grey, so a pixel belongs to the lockup if it is brighter
+# than its own surroundings (subtract a heavily blurred copy) OR if it carries
+# any real colour at all — the second test is what keeps the navy letters,
+# which are no brighter than the wall they sit on.
+#
+# Then one correction: the tagline and the brightest highlights were drawn for
+# a dark ground, and on paper they all but vanish. Where a pixel is pale AND
+# unsaturated its value is pulled down, so the line reads as type again.
 SITENA_SRC = os.path.expanduser("~/Downloads/image-1788459329574.webp")
 SITENA_CROP = (285, 195, 1760, 900)
 
@@ -197,18 +201,28 @@ def sitena():
     from PIL import ImageChops, ImageFilter
 
     art = load(SITENA_SRC).convert("RGB").crop(SITENA_CROP)
-    grey = art.convert("L")
-    lift = ImageChops.subtract(grey, grey.filter(ImageFilter.GaussianBlur(28)))
-    # 12 is the wall's own noise; 70 above it is a fully drawn stroke
-    mask = lift.point(lambda v: 0 if v < 12 else min(255, int((v - 12) * 255 / 70)))
-    shape = Image.new("RGBA", art.size, (255, 255, 255, 0))
-    shape.putalpha(mask)
-    shape = shape.crop(shape.getbbox())
-    shape = fit_width(shape, 1200)
-    shape.save(f"{A}/sitena.webp", "WEBP", quality=90, method=6, exact=True)
+    hue, sat, val = art.convert("HSV").split()
+
+    lift = ImageChops.subtract(val, val.filter(ImageFilter.GaussianBlur(30)))
+    alpha = ImageChops.lighter(
+        lift.point(lambda v: 0 if v < 12 else min(255, int((v - 12) * 3.6))),
+        sat.point(lambda v: 0 if v < 60 else min(255, int((v - 60) * 2.0))),
+    ).filter(ImageFilter.GaussianBlur(0.5))
+
+    pale = sat.point(lambda v: 255 if v < 45 else 0)
+    bright = val.point(lambda v: 255 if v > 150 else 0)
+    onPaper = Image.composite(val.point(lambda v: int(v * 0.42)), val,
+                              ImageChops.multiply(pale, bright))
+    art = Image.merge("HSV", (hue, sat, onPaper)).convert("RGB")
+
+    cut = art.copy()
+    cut.putalpha(alpha)
+    # 176 CSS px at most on screen, so 600 is already three times a retina
+    # pixel: 1200 was six, and four times the bytes for nothing anyone can see.
+    cut = fit_width(cut.crop(cut.getbbox()), 600)
+    cut.save(f"{A}/sitena.webp", "WEBP", quality=90, method=6, exact=True)
     size = os.path.getsize(f"{A}/sitena.webp")
-    print(f"{'sitena.webp':22s} {shape.width}x{shape.height}  {size // 1024}KB  (alpha mask)")
-    print(f"{'':22s} aspect-ratio for the CSS: {shape.width / shape.height:.3f}")
+    print(f"{'sitena.webp':22s} {cut.width}x{cut.height}  {size // 1024}KB  (its own colours, no ground)")
 
 
 if __name__ == "__main__":

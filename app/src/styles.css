@@ -1349,10 +1349,10 @@ html.bhy-menu-open {
 }
 
 /* ================= who built it =================
-   A quiet credit at the very bottom. Their lockup arrives as an alpha mask, so
-   what actually paints it is `currentColor` — the footer's own muted brown,
-   warming to her rose on hover. Nothing is drawn behind it: no card, no dark
-   ground, nothing that reads as a sticker on her page. */
+   A quiet credit at the very bottom, in their own colours: the lockup is cut
+   off the dark wall it was photographed on, so nothing is drawn behind it and
+   it sits on her paper like everything else. The label beside it stays in the
+   footer's voice and warms to her rose on hover. */
 .bhy-maker {
   display: inline-flex;
   align-items: center;
@@ -1365,21 +1365,10 @@ html.bhy-menu-open {
   letter-spacing: 0.08em;
 }
 .bhy-maker-mark {
-  /* Hidden unless the browser can actually mask: without the mask this is a
-     brown rectangle, which is worse than no credit at all. */
-  display: none;
+  display: block;
   width: 9rem;
-  aspect-ratio: 2.321;
-  background: currentColor;
+  height: auto;
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-@supports (mask-image: url("/assets/sitena.webp")) or
-  (-webkit-mask-image: url("/assets/sitena.webp")) {
-  .bhy-maker-mark {
-    display: block;
-    -webkit-mask: url("/assets/sitena.webp") center / contain no-repeat;
-    mask: url("/assets/sitena.webp") center / contain no-repeat;
-  }
 }
 @media (min-width: 768px) {
   .bhy-maker-mark {
