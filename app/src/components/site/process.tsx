@@ -33,7 +33,11 @@ export function Process({ t }: { t: SiteStrings }) {
                   {step.body}
                 </p>
               </div>
-              <figure data-drift="72" className="bhy-fig bhy-step-fig overflow-hidden">
+              <figure
+                data-drift="72"
+                data-zoom={`/assets/process-${i + 1}.webp`}
+                className="bhy-fig bhy-step-fig overflow-hidden"
+              >
                 <img
                   {...pic(`/assets/process-${i + 1}`, 1000)}
                   sizes="(min-width: 768px) 160px, 112px"

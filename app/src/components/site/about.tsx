@@ -27,7 +27,11 @@ export function About({ t }: { t: SiteStrings }) {
           </div>
           <div className="md:col-span-7">
             <div className="grid grid-cols-12 items-start gap-6">
-              <figure data-img-reveal className="bhy-fig col-span-7 overflow-hidden">
+              <figure
+                data-img-reveal
+                data-zoom="/assets/about-main.webp"
+                className="bhy-fig col-span-7 overflow-hidden"
+              >
                 <img
                   {...pic("/assets/about-main", 1400)}
                   sizes="(min-width: 768px) 34vw, 58vw"
@@ -40,6 +44,7 @@ export function About({ t }: { t: SiteStrings }) {
               <figure
                 data-img-reveal
                 data-drift="90"
+                data-zoom="/assets/about-side.webp"
                 className="bhy-fig col-span-5 mt-16 overflow-hidden md:mt-28"
               >
                 <img

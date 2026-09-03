@@ -1191,6 +1191,11 @@ html.bhy-menu-open {
   inset: 0;
   z-index: 70;
   display: grid;
+  /* A single track of a definite size. On `auto` tracks the picture's own
+     `max-height: 100%` had nothing to resolve against, so a tall photograph
+     opened taller than the screen and its bottom was simply cut off. */
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: clamp(0.75rem, 3vw, 2.5rem);
   background: rgba(20, 12, 6, 0.92);

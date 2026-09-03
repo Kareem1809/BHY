@@ -8,6 +8,7 @@ import { Footer } from "../components/site/footer";
 import { Hero } from "../components/site/hero";
 import { SiteNav } from "../components/site/nav";
 import { CursorTrail } from "../components/site/trail";
+import { Zoom } from "../components/site/zoom";
 import { Portfolio } from "../components/site/portfolio";
 import { Process } from "../components/site/process";
 import { Ribbon } from "../components/site/ribbon";
@@ -92,6 +93,7 @@ function Index() {
       <Footer t={t} />
       <WhatsAppFloat t={t} />
       <CursorTrail />
+      <Zoom t={t} />
     </div>
   );
 }

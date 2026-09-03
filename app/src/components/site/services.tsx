@@ -52,7 +52,10 @@ export function Services({ t }: { t: SiteStrings }) {
                   <span dir="ltr" className="block text-sm tracking-[0.2em] text-[#6B5748]">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <figure className="bhy-fig mt-5 overflow-hidden">
+                  <figure
+                    data-zoom={`/assets/service-${i + 1}.webp`}
+                    className="bhy-fig mt-5 overflow-hidden"
+                  >
                     <img
                       {...pic(`/assets/service-${i + 1}`, 1000)}
                       sizes="(min-width: 640px) 30vw, 100vw"
