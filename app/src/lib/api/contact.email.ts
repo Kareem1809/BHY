@@ -3,13 +3,15 @@ import type { Lang } from "../i18n";
 /**
  * The public site is a static export — there is no server behind it to receive
  * the form — so the browser hands the message straight to FormSubmit, which
- * relays it to Basma's inbox. No API key is involved: the endpoint *is* the
- * address, and it only starts delivering once she confirms it (one activation
- * mail, sent on the very first submission). The address is already printed in
- * the footer, so posting to it here exposes nothing new.
+ * relays it to Basma's inbox.
+ *
+ * This is the alias FormSubmit issued her when she confirmed the address, not
+ * the address itself: the endpoint used to spell out her inbox in the page
+ * source, where anything crawling the site could read it and post to it
+ * directly. The alias is meant to be public — it is the whole point of it —
+ * and it can be revoked and reissued without her ever changing her email.
  */
-const RECIPIENT = "basmahaj99@gmail.com";
-const ENDPOINT = `https://formsubmit.co/ajax/${RECIPIENT}`;
+const ENDPOINT = "https://formsubmit.co/ajax/1072f74d2a71a6614befd4a43eb2a12e";
 
 export type ContactMessage = {
   name: string;
@@ -20,6 +22,18 @@ export type ContactMessage = {
   /** Honeypot: a human leaves it empty, a form-filling bot does not. */
   honey: string;
 };
+
+// FormSubmit stamps its mail in its own timezone, so the hour on the message
+// is not the hour the enquiry was written. The real one is carried inside the
+// mail instead, read from the sender's own clock and written in Israel time —
+// the only clock that matters to whoever answers it.
+function sentAt() {
+  return new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date());
+}
 
 export async function sendContactMessage(data: ContactMessage) {
   if (data.honey) {
@@ -43,6 +57,7 @@ export async function sendContactMessage(data: ContactMessage) {
       אימייל: data.email,
       הודעה: data.message,
       "שפת הפנייה": data.lang === "he" ? "עברית" : "ערבית",
+      "מועד הפנייה": sentAt(),
     }),
   });
 
