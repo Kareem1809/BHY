@@ -265,6 +265,12 @@ html {
 .bhy-nav-row > * {
   pointer-events: auto;
 }
+/* The row of links rides a little above the middle of the strip, clear of the
+   display line that starts under it. Both prints carry the same lift, so the
+   ink twin still lands on the ivory one to the pixel. */
+.bhy-nav-controls {
+  transform: translateY(-0.6rem);
+}
 .bhy-nav-cut {
   position: absolute;
   inset: 0;
@@ -283,10 +289,22 @@ html {
    the ink print reads at 3.8:1 where the ivory one manages 2.2). A soft
    cream halo carries it over the brighter frames without putting a bar
    back. It is a static filter on a 90px-tall strip, not an animated one. */
+/* Over the film — the one ground that is neither paper nor espresso — the
+   ivory print gets a shadow the thickness of a hairline. Not a filter: this
+   row is written to every frame the strip changes height, and a filter on a
+   moving element is the one cost this page never pays. */
+.bhy-nav-onfilm .bhy-nav-strip > .bhy-nav-row {
+  text-shadow: 0 1px 3px rgba(20, 12, 6, 0.55);
+}
 .bhy-nav-onfilm .bhy-nav-cut .bhy-nav-row {
-  filter: drop-shadow(0 0 1px rgba(252, 249, 243, 0.95))
-    drop-shadow(0 1px 3px rgba(252, 249, 243, 0.85))
-    drop-shadow(0 0 24px rgba(252, 249, 243, 0.6));
+  /* Two tight passes, not one: the first draws the letter's own outline and
+     the second thickens it, which is what makes six small words hold their
+     shape over a photograph without setting them in a heavier weight the
+     Hebrew and Arabic faces do not both have. The wide pass lifts the whole
+     row off the picture behind it. */
+  filter: drop-shadow(0 0 1px rgba(252, 249, 243, 1)) drop-shadow(0 0 2px rgba(252, 249, 243, 0.95))
+    drop-shadow(0 1px 3px rgba(252, 249, 243, 0.9))
+    drop-shadow(0 0 24px rgba(252, 249, 243, 0.65));
 }
 .bhy-logo-link {
   display: block;
@@ -347,7 +365,9 @@ html {
 }
 .bhy-nav-link {
   position: relative;
-  font-size: 0.9375rem;
+  /* A point larger than the body's small type: these six words sit over a
+     moving photograph, which is the hardest ground on the page to read on. */
+  font-size: 1rem;
 }
 .bhy-nav-link::after {
   content: "";
@@ -369,7 +389,7 @@ a.bhy-nav-link:focus-visible::after {
 .bhy-lang {
   border-bottom: 1px solid currentColor;
   padding-bottom: 2px;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   line-height: 1.4;
   transition: opacity 0.25s ease;
 }
