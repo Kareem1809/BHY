@@ -281,10 +281,14 @@ html {
 .bhy-nav-cut .bhy-nav-row {
   color: var(--bhy-ink);
 }
-/* The ink print of the words can be taken away on its own, which is what the
-   film needs: they cross grounds the mark never does. Everywhere else the var
-   is 1 and the clip above is the only thing deciding anything. The fade is
-   what stops the change of print reading as a flicker. */
+/* Either half of the ink print can be taken away on its own, which is what the
+   film needs: the words and the mark stand on different parts of the picture.
+   Everywhere else both vars are 1 and the clip above is the only thing deciding
+   anything. The fade is what stops a change of print reading as a flicker. */
+.bhy-nav-cut .bhy-logo-link {
+  opacity: var(--bhy-ink-mark, 1);
+  transition: opacity 0.35s ease;
+}
 .bhy-nav-cut .bhy-nav-controls {
   opacity: var(--bhy-ink-words, 1);
   transition: opacity 0.35s ease;
@@ -302,8 +306,17 @@ html {
 .bhy-logo-link {
   display: block;
   flex: none;
-  height: 82%;
+  /* The navbar's prints are cropped to the artwork, so this share is the mark
+     itself and not half a file of empty canvas. 66% here is the size the old
+     uncropped print looked like at 82%; the phone gets nearly the whole strip,
+     where the mark used to come out 59px in a 90px bar. */
+  height: 66%;
   transition: opacity 0.35s ease;
+}
+@media (max-width: 767px) {
+  .bhy-logo-link {
+    height: 92%;
+  }
 }
 /* Phones only: the footer prints the lockup at full width, and on a screen
    this narrow the floating one sits directly over it. One mark per screen. */

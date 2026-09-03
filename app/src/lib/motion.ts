@@ -321,6 +321,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
               // the ink print over the film, where the ceiling behind it is
               // light at both ends of the scrub.
               const CROSSOVER = 127;
+              let markInk = true;
               let wordsInk = true;
               const inked = (was: boolean, darkShare: number) =>
                 was ? darkShare < 0.6 : darkShare < 0.4;
@@ -331,6 +332,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
               probe.width = 24;
               probe.height = 6;
               const ink = probe.getContext("2d", { willReadFrequently: true });
+              const markEl = cut.querySelector<HTMLElement>(".bhy-logo-link");
               const wordsEl = cut.querySelector<HTMLElement>(".bhy-nav-controls");
 
               // The luminance of the film under one box, in the film's own
@@ -369,11 +371,18 @@ export function useSiteMotion(deps: readonly unknown[]) {
               };
 
               const readFilm = () => {
-                if (!film || !wordsEl) return;
+                if (!film || !wordsEl || !markEl) return;
                 const stage = film.getBoundingClientRect();
                 if (stage.height < 1) return;
-                const share = groundUnder(wordsEl.getBoundingClientRect(), stage);
-                if (share !== null) setWords(inked(wordsInk, share));
+                const words = groundUnder(wordsEl.getBoundingClientRect(), stage);
+                if (words !== null) setWords(inked(wordsInk, words));
+                const mark = groundUnder(markEl.getBoundingClientRect(), stage);
+                if (mark !== null) setMark(inked(markInk, mark));
+              };
+              const setMark = (on: boolean) => {
+                if (on === markInk) return;
+                markInk = on;
+                nav.style.setProperty("--bhy-ink-mark", on ? "1" : "0");
               };
               const setWords = (on: boolean) => {
                 if (on === wordsInk) return;
@@ -440,6 +449,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 } else {
                   unwatchFilm();
                   setWords(true);
+                  setMark(true);
                 }
               };
 

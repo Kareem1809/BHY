@@ -225,8 +225,63 @@ def sitena():
     print(f"{'sitena.webp':22s} {cut.width}x{cut.height}  {size // 1024}KB  (its own colours, no ground)")
 
 
+# ------------------------------------------------------- the nav's own prints
+# Her lockup is drawn on a 1800x1001 canvas with the artwork itself only 796px
+# across the middle of it — more than half the file is empty. In the footer that
+# air is welcome; in the navbar it meant the mark was two fifths of the height
+# it looked like it had, and on a phone it came out 59px in a 90px bar.
+#
+# So the navbar gets its own pair of prints, cropped to the artwork and nothing
+# else. Both are cut with the SAME box, because they are stacked on top of each
+# other and the ink one is clipped to whatever is light behind it: a pixel of
+# drift between them would show as a seam through the middle of the mark.
+def ink_logo():
+    """The print for light ground — including a photograph.
+
+    Her lockup's own bronze and olive measure 4:1 against the film's brighter
+    frames and vanish at the size the navbar gives them; Kareem, on a phone:
+    «وهو بالمرة مش مبين هسا بهاي الألوان». So the navbar carries the mark in
+    the site's own ink the same way it carries the paper print for dark ground:
+    the artwork's alpha exactly as drawn, repainted, with a whisper of the
+    original modelling left so the leaves and the column keep their depth.
+    Around 9:1 on the film's lit ceiling. Her full-colour lockup stays where it
+    can be read in colour — the footer, on paper.
+    """
+    im = load(f"{A}/logo.webp").convert("RGBA")
+    alpha = im.split()[3]
+    grey = im.convert("L")
+    ink = (62, 46, 35)
+    # the original's light and shade, compressed into the dark end
+    shade = grey.point(lambda v: int(78 + 60 * (v / 255)))
+    out = Image.merge("RGBA", (
+        shade.point(lambda v: min(255, round(v * ink[0] / 110))),
+        shade.point(lambda v: min(255, round(v * ink[1] / 110))),
+        shade.point(lambda v: min(255, round(v * ink[2] / 110))),
+        alpha,
+    ))
+    out.save(f"{A}/logo-ink.webp", "WEBP", lossless=True, quality=100, method=6)
+    print(f"logo-ink.webp {out.size} {os.path.getsize(f'{A}/logo-ink.webp') // 1024}KB")
+
+
+def nav_prints():
+    ink_logo()
+    ink = load(f"{A}/logo-ink.webp").convert("RGBA")
+    light = load(f"{A}/logo-light.webp").convert("RGBA")
+    box = ink.getbbox()
+    other = light.getbbox()
+    box = (min(box[0], other[0]), min(box[1], other[1]),
+           max(box[2], other[2]), max(box[3], other[3]))
+    for src, name in ((ink, "nav-mark.webp"), (light, "nav-mark-light.webp")):
+        cut = fit_width(src.crop(box), 900)
+        cut.save(f"{A}/{name}", "WEBP", lossless=True, quality=100, method=6, exact=True)
+        print(f"{name:22s} {cut.width}x{cut.height}  {os.path.getsize(f'{A}/{name}') // 1024}KB")
+    print(f"{'':22s} cut from {ink.size} at {box}")
+
+
 if __name__ == "__main__":
-    if "--sitena" in sys.argv:
+    if "--nav-prints" in sys.argv:
+        nav_prints()
+    elif "--sitena" in sys.argv:
         sitena()
     elif "--icons" in sys.argv:
         icons()

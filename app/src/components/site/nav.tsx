@@ -30,10 +30,10 @@ function GhostRow({ t }: { t: SiteStrings }) {
       <div className="bhy-nav-row">
         <span className="bhy-logo-link">
           <img
-            src="/assets/footer-logo.webp"
+            src="/assets/nav-mark.webp"
             alt=""
-            width={1800}
-            height={1001}
+            width={796}
+            height={802}
             className="bhy-logo"
           />
         </span>
@@ -125,10 +125,10 @@ export function SiteNav({ t, lang, onToggleLang }: NavProps) {
                   This print keeps the artwork's alpha exactly as drawn and
                   repaints it in paper: 12.1:1 on the same brown. */}
               <img
-                src="/assets/logo-light.webp"
+                src="/assets/nav-mark-light.webp"
                 alt={t.brandLatin}
-                width={1800}
-                height={1001}
+                width={796}
+                height={802}
                 className="bhy-logo"
               />
             </a>
