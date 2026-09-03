@@ -41,7 +41,15 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
     else if (!EMAIL_RE.test(values.email)) nextErrors.email = t.contact.invalidEmail;
     if (!values.message) nextErrors.message = t.contact.required;
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    // Send the caret to the first field that needs fixing. Without this the
+    // message appears, focus stays on the button, and someone reading by
+    // keyboard or screen reader is told nothing at all.
+    const firstBad = Object.keys(nextErrors)[0];
+    if (firstBad) {
+      const field = form.elements.namedItem(firstBad);
+      if (field instanceof HTMLElement) field.focus();
+      return;
+    }
 
     setStatus("sending");
     try {
@@ -124,11 +132,17 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
               <input
                 id="contact-name"
                 name="name"
+                aria-invalid={errors.name ? true : undefined}
+                aria-describedby={errors.name ? "contact-name-error" : undefined}
                 type="text"
                 autoComplete="name"
                 className="bhy-input"
               />
-              {errors.name ? <p className="bhy-error">{errors.name}</p> : null}
+              {errors.name ? (
+                <p id="contact-name-error" role="alert" className="bhy-error">
+                  {errors.name}
+                </p>
+              ) : null}
             </div>
             <div className="grid grid-cols-1 gap-9 sm:grid-cols-2">
               <div className="bhy-field">
@@ -138,11 +152,17 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
                 <input
                   id="contact-phone"
                   name="phone"
+                  aria-invalid={errors.phone ? true : undefined}
+                  aria-describedby={errors.phone ? "contact-phone-error" : undefined}
                   type="tel"
                   autoComplete="tel"
                   className="bhy-input"
                 />
-                {errors.phone ? <p className="bhy-error">{errors.phone}</p> : null}
+                {errors.phone ? (
+                <p id="contact-phone-error" role="alert" className="bhy-error">
+                  {errors.phone}
+                </p>
+              ) : null}
               </div>
               <div className="bhy-field">
                 <label className="bhy-label" htmlFor="contact-email">
@@ -151,19 +171,35 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
                 <input
                   id="contact-email"
                   name="email"
+                  aria-invalid={errors.email ? true : undefined}
+                  aria-describedby={errors.email ? "contact-email-error" : undefined}
                   type="email"
                   autoComplete="email"
                   className="bhy-input"
                 />
-                {errors.email ? <p className="bhy-error">{errors.email}</p> : null}
+                {errors.email ? (
+                <p id="contact-email-error" role="alert" className="bhy-error">
+                  {errors.email}
+                </p>
+              ) : null}
               </div>
             </div>
             <div className="bhy-field">
               <label className="bhy-label" htmlFor="contact-message">
                 {t.contact.message}
               </label>
-              <textarea id="contact-message" name="message" className="bhy-input bhy-textarea" />
-              {errors.message ? <p className="bhy-error">{errors.message}</p> : null}
+              <textarea
+                id="contact-message"
+                name="message"
+                aria-invalid={errors.message ? true : undefined}
+                aria-describedby={errors.message ? "contact-message-error" : undefined}
+                className="bhy-input bhy-textarea"
+              />
+              {errors.message ? (
+                <p id="contact-message-error" role="alert" className="bhy-error">
+                  {errors.message}
+                </p>
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-8">
               <button type="submit" disabled={status === "sending"} className="bhy-submit">
@@ -172,7 +208,7 @@ export function Contact({ t, lang }: { t: SiteStrings; lang: Lang }) {
               </button>
               <p aria-live="polite" className="min-h-6 text-sm">
                 {status === "success" ? (
-                  <span className="text-[#B67B62]">{t.contact.success}</span>
+                  <span className="text-[#94553A]">{t.contact.success}</span>
                 ) : null}
                 {status === "error" ? (
                   <span className="text-[#9A3B2E]">{t.contact.error}</span>

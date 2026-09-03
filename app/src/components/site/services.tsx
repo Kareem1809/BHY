@@ -23,7 +23,7 @@ export function Services({ t }: { t: SiteStrings }) {
       <div aria-hidden="true" className="absolute inset-0 bg-[#1f150e]/70" />
       <div className="relative z-10 mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-16 px-6 md:grid-cols-12">
         <div className="md:col-span-4">
-          <p data-drift="24" className="bhy-eyebrow text-[#F5EFE6]/70">
+          <p data-drift="24" className="bhy-eyebrow bhy-eyebrow-light">
             {t.services.eyebrow}
           </p>
           <h2 data-words className="bhy-display-2 mt-6 text-[#F5EFE6]">

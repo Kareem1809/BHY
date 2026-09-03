@@ -125,5 +125,62 @@ def main():
     print(f"\nfull prints: {before / 1e6:.2f}MB -> {after / 1e6:.2f}MB")
 
 
+# ---------------------------------------------------------------- icons
+# The four app icons shipped with the scaffold were the whole logo squeezed
+# into a square, which cut her wordmark through the middle of the letters —
+# visible on a home screen, in the install prompt and in the app switcher.
+# They are rebuilt here from the emblem alone: the column, the monogram and
+# its branches, centred on her paper with nothing running off the edge.
+EMBLEM = (572, 99, 1204, 679)  # the emblem band inside assets/logo.webp
+
+
+def emblem_card(margin=0.09):
+    """Her emblem, squared on the paper, with `margin` of clear ground."""
+    logo = load(f"{A}/logo.webp").convert("RGBA")
+    em = logo.crop(EMBLEM)
+    side = round(max(em.size) * (1 + margin * 2))
+    card = Image.new("RGBA", (side, side), (245, 239, 230, 255))
+    card.alpha_composite(em, ((side - em.width) // 2, (side - em.height) // 2))
+    return card.convert("RGB")
+
+
+def icons():
+    card = emblem_card()
+    for name, size in (("apple-touch-icon.png", 180), ("icon-192.png", 192), ("icon-512.png", 512)):
+        card.resize((size, size), Image.LANCZOS).save(f"app/public/{name}")
+        print(f"{name:24s} {size}px  from the emblem")
+    # A maskable icon may be cropped to a circle: everything that matters has
+    # to sit inside the middle 80%.
+    safe = emblem_card(margin=0.28).resize((512, 512), Image.LANCZOS)
+    safe.save("app/public/icon-512-maskable.png")
+    print(f"{'icon-512-maskable.png':24s} 512px  with the safe zone")
+
+    # And the file every browser asks for by name. Her watercolour hairline
+    # cannot survive 16px, so the small sizes carry the monogram the way
+    # favicon.svg draws it — her rose on her paper — and 48px carries the
+    # emblem itself.
+    from PIL import ImageDraw, ImageFont
+
+    def lettered(size):
+        im = Image.new("RGB", (size, size), (245, 239, 230))
+        draw = ImageDraw.Draw(im)
+        font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Georgia.ttf",
+                                  round(size * 0.62))
+        box = draw.textbbox((0, 0), "BY", font=font)
+        draw.text(((size - box[2] + box[0]) / 2 - box[0],
+                   (size - box[3] + box[1]) / 2 - box[1] - size * 0.04),
+                  "BY", font=font, fill=(148, 85, 58))
+        draw.line((size * 0.26, size * 0.84, size * 0.74, size * 0.84),
+                  fill=(125, 122, 78), width=max(1, round(size / 22)))
+        return im
+
+    ico = lettered(64)
+    ico.save("app/public/favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
+    print(f"{'favicon.ico':24s} 16/32/48")
+
+
 if __name__ == "__main__":
-    main()
+    if "--icons" in sys.argv:
+        icons()
+    else:
+        main()

@@ -74,7 +74,7 @@ export function Footer({ t }: { t: SiteStrings }) {
       <div className="border-t border-[#3E2E23]/15">
         <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-3 px-6 py-6 text-sm text-[#6B5748]">
           <span>{t.footer.rights}</span>
-          <span dir="ltr" className="font-latin tracking-[0.18em] text-[#B67B62]">
+          <span dir="ltr" className="font-latin tracking-[0.18em] text-[#94553A]">
             {t.taglineLatin}
           </span>
         </div>

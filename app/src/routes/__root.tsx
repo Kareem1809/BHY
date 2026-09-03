@@ -56,6 +56,9 @@ function buildHead() {
       { rel: "alternate", hrefLang: "ar", href: `${SITE_URL}/?lang=ar` },
       { rel: "alternate", hrefLang: "x-default", href: `${SITE_URL}/` },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      // The file every browser asks for by name whether it is declared or
+      // not — undeclared it was answering 404 on every first visit.
+      { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
     ],

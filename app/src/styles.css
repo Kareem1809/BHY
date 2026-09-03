@@ -120,6 +120,11 @@
   --bhy-ink: #3e2e23;
   --bhy-espresso: #2a1e16;
   --bhy-rose: #b67b62;
+  /* Her rose, taken down to where small text can carry it. The brand tone
+     measures 3.1:1 on the paper and 2.8:1 on the band — under the 4.5:1 a
+     14px line needs — so anything small and rose uses this one instead, and
+     the brand tone stays for display sizes and for the espresso ground. */
+  --bhy-rose-ink: #94553a;
   --bhy-muted: #6b5748;
   --bhy-olive: #7d7a4e;
   --bhy-font-latin: "Cormorant Garamond", "Times New Roman", serif;
@@ -182,6 +187,13 @@ html {
   font-size: 0.8125rem;
   letter-spacing: 0.16em;
   color: var(--bhy-muted);
+}
+/* The same label on the espresso ground. It needs its own class, not a
+   utility: `.bhy-eyebrow` is unlayered, so it beat the Tailwind colour on it
+   and the label was rendering muted brown on dark brown — 2.4:1, all but
+   invisible. This is 8:1. */
+.bhy-eyebrow-light {
+  color: rgba(245, 239, 230, 0.75);
 }
 .font-latin {
   font-family: var(--bhy-font-latin);
@@ -758,7 +770,7 @@ button.bhy-lang:focus-visible {
 }
 
 .bhy-field:focus-within .bhy-label {
-  color: var(--bhy-rose);
+  color: var(--bhy-rose-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1003,7 +1015,7 @@ html.bhy-menu-open {
   font-family: var(--bhy-font-latin);
   font-size: 0.875rem;
   letter-spacing: 0.18em;
-  color: var(--bhy-rose);
+  color: var(--bhy-rose-ink);
 }
 
 /* ================= process ledger ================= */
@@ -1116,65 +1128,197 @@ html.bhy-menu-open {
   }
 }
 
-/* ================= the enlargement on hover =================
-   Hovering any frame in the projects section floats the FULL print of that
-   same photograph beside the pointer — the real file, not a scaled-up
-   thumbnail. The outer element is the one the follow loop moves, so a frame
-   costs exactly one transform; the inner one owns the size, the entrance and
-   the shadow, and is never touched while the pointer travels. */
-.bhy-zoom {
+/* ================= the loupe =================
+   Hovering any frame in the projects section lays a round glass on it: the
+   real print, twice life size, cropped to whatever the glass is sitting on.
+   The outer element is the only thing the follow loop moves, and the print
+   inside is moved by a transform too — so a travelling loupe costs two
+   composited writes a frame and not a single repaint. */
+.bhy-loupe {
   position: fixed;
+  /* PHYSICAL top/left, deliberately: the follow loop writes viewport
+     coordinates straight from the pointer, and on this RTL page
+     `inset-inline-start` anchored the glass to the right edge. */
   top: 0;
-  /* PHYSICAL left, deliberately: the follow loop writes viewport coordinates
-     straight from the pointer, and on this RTL page `inset-inline-start`
-     anchored the panel to the right edge — every preview flew off screen. */
   left: 0;
-  width: max-content;
   z-index: 46;
   pointer-events: none;
-  /* The whole entrance, and nothing else. A scale on the way in showed the
-     photograph a few percent cropped before it settled, and the picture is
-     the entire point of this panel: it is never anything but complete. */
   opacity: 0;
-  transition: opacity 0.26s ease;
+  transition: opacity 0.22s ease;
 }
-.bhy-zoom-frame {
-  /* The box takes the photograph's OWN proportions, never a crop of them.
-     A fixed height with a max-width was capping the wide frames on their
-     width alone, so a 16:9 room came back as a tall square with its sides
-     cut off. Both terms are derived from the same ratio here, so whichever
-     one binds, the other follows and the whole picture is inside. */
-  --bhy-zoom-ar: 1.5;
-  width: min(76vw, calc(76vh * var(--bhy-zoom-ar)));
-  height: min(76vh, calc(76vw / var(--bhy-zoom-ar)));
+.bhy-loupe-eye {
+  --bhy-loupe: clamp(11.25rem, 17vw, 15rem);
+  position: relative;
+  width: var(--bhy-loupe);
+  height: var(--bhy-loupe);
   overflow: hidden;
+  border-radius: 50%;
   background: var(--bhy-panel);
   box-shadow:
-    0 2px 0 rgba(245, 239, 230, 0.5) inset,
-    0 40px 90px -34px rgba(20, 12, 6, 0.7);
-  /* Static, deliberately. Scaling THIS element on the way in meant the
-     browser re-rasterising a 90px shadow on every frame of the entrance,
-     which is exactly the catch you feel as it opens. The photograph inside
-     does the moving instead, clipped by this frame. */
+    0 0 0 1px rgba(252, 249, 243, 0.55),
+    0 0 0 7px rgba(62, 46, 35, 0.06),
+    0 26px 60px -26px rgba(20, 12, 6, 0.6);
+  /* Static: the glass is round and its ring never re-rasterises. */
   transform: translate(-50%, -50%);
 }
-.bhy-zoom img {
+.bhy-loupe-eye img {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
+  max-width: none;
 }
-.bhy-zoom--on {
+.bhy-loupe--on {
   opacity: 1;
 }
-/* A finger has no hover: on a phone this would only ever be in the way. */
+/* A finger has no hover: on a phone the glass would only be in the way —
+   there, tapping opens the picture full screen instead. */
 @media (hover: none), (pointer: coarse) {
-  .bhy-zoom {
+  .bhy-loupe {
     display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bhy-zoom {
+  .bhy-loupe {
     display: none;
+  }
+}
+
+/* ================= the picture, full screen =================
+   A click on any frame gives the whole screen to that one photograph. */
+.bhy-full {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2.5rem);
+  background: rgba(20, 12, 6, 0.92);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0s linear 0.3s;
+}
+.bhy-full--on {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.3s ease,
+    visibility 0s;
+}
+.bhy-full img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transform: scale(0.985);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bhy-full--on img {
+  transform: scale(1);
+}
+.bhy-full-close {
+  position: absolute;
+  top: clamp(0.75rem, 2.5vw, 1.75rem);
+  inset-inline-end: clamp(0.75rem, 2.5vw, 1.75rem);
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(245, 239, 230, 0.35);
+  border-radius: 50%;
+  color: var(--bhy-paper);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease;
+}
+.bhy-full-close:hover {
+  border-color: rgba(245, 239, 230, 0.8);
+  background: rgba(245, 239, 230, 0.1);
+}
+.bhy-full-open .bhy-loupe {
+  display: none;
+}
+.bhy-full-close svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.bhy-fig {
+  cursor: zoom-in;
+}
+
+/* The pointer's wake: six drawing-board marks that fall behind the mouse.
+ * A decoration for a desk, so it exists only where there is a real pointer,
+ * sits under everything that can be clicked, and never takes a click itself. */
+.bhy-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.bhy-fleck {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  opacity: 0;
+  transform: translate3d(-100px, -100px, 0);
+}
+
+.bhy-fleck svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.bhy-menu-open .bhy-trail,
+.bhy-full-open .bhy-trail {
+  display: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .bhy-trail { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bhy-trail { display: none; }
+}
+
+/* ================= what a thumb can hit =================
+   These are all text links and bare buttons, so the design gives them the
+   height of their own line — 19px in the footer, 35 on the send button. A
+   thumb needs 44. The target is grown by an invisible outset, never by
+   padding: padding would push the underlines these links are drawn with away
+   from their text. Nothing on the page moves, and none of it exists on a
+   mouse. */
+@media (pointer: coarse) {
+  .bhy-nav-link,
+  .bhy-lang,
+  .bhy-cta-path,
+  .bhy-cta-split,
+  .bhy-cta-underline,
+  .bhy-submit,
+  .bhy-menu-social {
+    position: relative;
+  }
+  .bhy-nav-link::before,
+  .bhy-lang::before,
+  .bhy-cta-path::before,
+  .bhy-cta-split::before,
+  .bhy-cta-underline::before,
+  .bhy-submit::before,
+  .bhy-menu-social::before {
+    content: "";
+    position: absolute;
+    inset-block: -0.75rem;
+    inset-inline: -0.5rem;
   }
 }
