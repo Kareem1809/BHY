@@ -296,6 +296,24 @@ html {
 .bhy-nav-cut .bhy-nav-row > * {
   pointer-events: none;
 }
+/* On a phone, over the film only, the mark gets a halo behind it. Kareem asked
+   for the blur gone on the desktop and back here — «واعمله بلر بس عالتلفون
+   وخليه عنجد يبين» — and the two are not a contradiction: on a wide screen the
+   mark is 154px over a picture that is mostly ceiling, and on a phone it is 83
+   over whatever the crop happens to land on. Each print gets the halo of the
+   ground it is FOR, so the one on screen is always the one being lifted: the
+   exposed-down print is carried by cream, the exposed-up print by shadow. */
+@media (max-width: 767px) {
+  .bhy-nav-onfilm .bhy-nav-cut .bhy-logo-link {
+    filter: drop-shadow(0 0 2px rgba(252, 249, 243, 0.95))
+      drop-shadow(0 0 7px rgba(252, 249, 243, 0.85))
+      drop-shadow(0 0 20px rgba(252, 249, 243, 0.7));
+  }
+  .bhy-nav-onfilm .bhy-nav-strip > .bhy-nav-row .bhy-logo-link {
+    filter: drop-shadow(0 0 3px rgba(20, 12, 6, 0.75)) drop-shadow(0 0 12px rgba(20, 12, 6, 0.6));
+  }
+}
+
 /* Nothing is drawn behind the lockup over the film. A cream halo used to sit
    under the ink print to lift it off the brighter frames; Kareem read it as
    blur — «البلر الي علا اللوجو بدي ينقام» — and he is right that it softened

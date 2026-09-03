@@ -119,11 +119,10 @@ export function SiteNav({ t, lang, onToggleLang }: NavProps) {
         <div className="bhy-nav-strip">
           <div className="bhy-nav-row">
             <a href="#top" onClick={close} className="bhy-logo-link" aria-label={t.brandLatin}>
-              {/* The print for dark ground. Her lockup's own bronze and olive
-                  measured 4.0:1 on the espresso section — 1.4:1 at the worst —
-                  so the mark sank into the brown instead of standing on it.
-                  This print keeps the artwork's alpha exactly as drawn and
-                  repaints it in paper: 12.1:1 on the same brown. */}
+              {/* The print for dark ground: her lockup in its own colours,
+                  exposed up so the leaves stay green on the espresso instead of
+                  going black. The ink twin below is the same artwork exposed
+                  down, for paper and for the film's lit ceiling. */}
               <img
                 src="/assets/nav-mark-light.webp"
                 alt={t.brandLatin}
