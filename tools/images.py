@@ -179,8 +179,26 @@ def icons():
     print(f"{'favicon.ico':24s} 16/32/48")
 
 
+# ------------------------------------------------------------ the maker's mark
+# SITENA built this site, and the footer credits them. What Kareem sent is a
+# mockup — the lockup photographed on a dark wall — so the badge keeps that
+# ground rather than pretending the artwork has an alpha channel it does not.
+SITENA_SRC = os.path.expanduser("~/Downloads/image-1788459329574.webp")
+SITENA_CROP = (290, 230, 1720, 845)
+
+
+def sitena():
+    im = load(SITENA_SRC).convert("RGB").crop(SITENA_CROP)
+    for name, width, q in (("sitena", 900, 86), ("sitena-sm", 460, 84)):
+        out = fit_width(im, width)
+        out.save(f"{A}/{name}.webp", "WEBP", quality=q, method=6)
+        print(f"{name:22s} {out.width}x{out.height}  {os.path.getsize(f'{A}/{name}.webp') // 1024}KB")
+
+
 if __name__ == "__main__":
-    if "--icons" in sys.argv:
+    if "--sitena" in sys.argv:
+        sitena()
+    elif "--icons" in sys.argv:
         icons()
     else:
         main()

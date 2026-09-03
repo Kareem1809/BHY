@@ -67,6 +67,8 @@ export type SiteStrings = {
     socials: { label: string; href: string }[];
     rights: string;
     top: string;
+    builtBy: string;
+    builtByText: string;
   };
   notFound: { title: string; body: string; home: string };
 };
@@ -77,13 +79,21 @@ export const SITE_URL = "https://basmahaj.com";
 export const INSTAGRAM_HANDLE = "bhy__design";
 export const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_HANDLE}`;
 export const EMAIL_ADDRESS = "basmahaj99@gmail.com";
-// 054-822-0962 in international form: wa.me refuses the leading zero and wants
+// 054-294-5454 in international form: wa.me refuses the leading zero and wants
 // the country code with no plus or dashes.
-export const PHONE_INTL = "972548220962";
+export const PHONE_INTL = "972542945454";
 const WHATSAPP_URL = `https://wa.me/${PHONE_INTL}`;
 
 // The chat opens with a greeting already typed, in the reader's language.
 export const whatsappUrl = (text: string) => `${WHATSAPP_URL}?text=${encodeURIComponent(text)}`;
+
+// SITENA built this site. Their credit in the footer opens their WhatsApp, not
+// hers — a different company, a different number, kept apart on purpose so no
+// edit to the studio's contact details can ever reroute an enquiry meant for
+// the people who made the site.
+export const MAKER_PHONE_INTL = "972548220962";
+export const makerWhatsappUrl = (text: string) =>
+  `https://wa.me/${MAKER_PHONE_INTL}?text=${encodeURIComponent(text)}`;
 
 export const STRINGS: Record<Lang, SiteStrings> = {
   he: {
@@ -232,6 +242,9 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       ],
       rights: "© 2026 בסמה חאג' יחיא. כל הזכויות שמורות.",
       top: "חזרה למעלה",
+      builtBy: "בניית האתר",
+      builtByText:
+        "שלום SITENA, הגעתי דרך האתר של בסמה חאג' יחיא. אני צריך פתרון לבעיה או רוצה לבנות אתר.",
     },
     notFound: {
       title: "העמוד לא נמצא",
@@ -385,6 +398,9 @@ export const STRINGS: Record<Lang, SiteStrings> = {
       ],
       rights: "© 2026 بسمة حاج يحيى. جميع الحقوق محفوظة.",
       top: "العودة إلى الأعلى",
+      builtBy: "تنفيذ الموقع",
+      builtByText:
+        "مرحباً SITENA، وصلت من موقع بسمة حاج يحيى. بدي حل لمشكلتي أو بدي أبني موقع.",
     },
     notFound: {
       title: "الصفحة غير موجودة",
