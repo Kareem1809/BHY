@@ -13,6 +13,15 @@ import type { Lang } from "../i18n";
  */
 const ENDPOINT = "https://formsubmit.co/ajax/1072f74d2a71a6614befd4a43eb2a12e";
 
+/**
+ * Every enquiry is copied here as well as to Basma. Assembled instead of
+ * written out: the reason her inbox went behind an alias is that an address
+ * spelled out in the page source is a harvester's breakfast, and this one
+ * would otherwise sit in the bundle in the clear. Not a secret — just not a
+ * string a crawler's regex can lift.
+ */
+const MAKER_COPY = ["accountant", "kareem00.com"].join("@");
+
 export type ContactMessage = {
   name: string;
   phone: string;
@@ -52,6 +61,11 @@ export async function sendContactMessage(data: ContactMessage) {
       // Hebrew keys below mean FormSubmit can't spot the sender's address on
       // its own; naming it here is what makes "Reply" in Gmail go to them.
       _replyto: data.email,
+      // Kareem keeps a copy of every enquiry (asked for it in August, said yes
+      // on 2026-09-04). It is a CC, not a BCC — FormSubmit has no BCC — so
+      // Basma sees the address on her copy. The person who wrote in never
+      // does: they are not on the mail at all, only in Reply-To.
+      _cc: MAKER_COPY,
       שם: data.name,
       טלפון: data.phone,
       אימייל: data.email,
