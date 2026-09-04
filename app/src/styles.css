@@ -1412,25 +1412,3 @@ html.bhy-menu-open {
 .bhy-maker:hover .bhy-maker-mark {
   transform: translateY(-1px);
 }
-
-
-/* The blackout. Black is the default state of the document: the sheet is
-   painted, the page under it is locked still, and only the inline script in
-   the head — after ?open — adds .bhy-open and takes it away. Written this way
-   round so a visitor never sees a frame of the real site first.
-   Remove this block and the <div id="bhy-blackout"> to end it. */
-#bhy-blackout {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  background: #000;
-}
-
-html:not(.bhy-open),
-html:not(.bhy-open) body {
-  overflow: hidden;
-}
-
-html.bhy-open #bhy-blackout {
-  display: none;
-}
