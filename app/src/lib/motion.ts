@@ -292,21 +292,23 @@ export function useSiteMotion(deps: readonly unknown[]) {
               // Over the film the words have no fixed ground: they open on
               // dark wood and by a quarter of the way through they are on a lit
               // ceiling. So they ask the picture itself what they are standing
-              // on, and print themselves accordingly — a 24x6 canvas takes the
+              // on, and print themselves accordingly — a 64x8 canvas takes the
               // patch of video under them and counts how much of it is dark.
               //
-              // Read on every paint, while the strip is over the film, and
+              // Read ten times a second while the strip is over the film, and
               // once more after the playhead settles — it keeps gliding for
               // about a second after the scrolling stops.
               //
-              // This was debounced at first, on the belief that a readback off
-              // a video texture costs a frame. It does not. Measured properly —
-              // same page, film primed, three runs each — reading every paint
-              // and reading nothing at all both drop 28-29 frames of 389 on a
-              // scrub through the hero: that cost is the film's own seeking,
-              // and it is there either way. The debounce only ever bought a
-              // lockup that changed colour after you stopped moving, which is
-              // what Kareem saw: «بدي يتغير لونو وانا اتحرك».
+              // Ten, not once a paint. The hold below refuses a change that
+              // comes sooner than 450ms after the last one, so between any two
+              // changes the lockup can possibly make there is room for four
+              // readings; a reading every paint takes fifty and throws away
+              // forty-six. Those forty-six are not free — each one pulls the
+              // film's own pixels back off the GPU in the middle of the frame
+              // that is scrubbing it, and on a real machine that is a stutter
+              // (my headless timings said otherwise; Kareem's eyes were right).
+              // Ten a second is still every 100ms: the lockup changes while you
+              // move, which is what he asked for.
               //
               // Measuring the FILE instead would be cheaper still and wrong:
               // object-fit: cover crops the sides by an amount that depends on
@@ -317,17 +319,12 @@ export function useSiteMotion(deps: readonly unknown[]) {
               // #3E2E23 (L 0.029), paper is #F5EFE6 (L 0.85), and the contrast
               // curves cross where the ground's luminance is 0.217.
               //
-              // What is counted is the SHARE of the patch darker than that,
-              // not its average, and the gap between the two thresholds is what
-              // keeps a patch sitting near the line from flickering.
-              //
-              // Only the words are read this way. The mark's box ends the film
-              // half over a bright ceiling and half over a dark cabinet, and no
-              // single number for that box is honest: by average or by majority
-              // it reads "dark" and would print her lockup in paper over a lit
-              // wall, which is worse than the ink it replaces. Her mark keeps
-              // the ink print over the film, where the ceiling behind it is
-              // light at both ends of the scrub.
+              // The mark is read the same way but almost never turns: the
+              // ceiling behind it is light at both ends of the scrub, and where
+              // it is not — half a bright ceiling, half a dark cabinet — the
+              // share lands between the two thresholds and nothing moves. That
+              // is the point of having two: paper over a lit wall would be
+              // worse than the ink it replaced.
               const CROSSOVER = 127;
               let markInk = true;
               let wordsInk = true;
@@ -336,16 +333,25 @@ export function useSiteMotion(deps: readonly unknown[]) {
 
               const film = document.querySelector<HTMLVideoElement>("[data-hero-film]");
               const poster = document.querySelector<HTMLImageElement>(".bhy-hero-img img");
-              const probe = document.createElement("canvas");
-              probe.width = 24;
-              probe.height = 6;
-              const ink = probe.getContext("2d", { willReadFrequently: true });
               const markEl = cut.querySelector<HTMLElement>(".bhy-logo-link");
               const wordsEl = cut.querySelector<HTMLElement>(".bhy-nav-controls");
 
-              // The luminance of the film under one box, in the film's own
-              // pixels. The blob is same-origin, so the canvas stays readable.
-              const groundUnder = (box: DOMRect, stage: DOMRect) => {
+              // One readback a reading, not two. The mark and the words sit on
+              // the same line, so a single patch of film wide enough to hold
+              // both is taken once and each of them is counted inside it.
+              // Pulling the film's pixels back off the GPU costs the same
+              // whether the piece asked for is narrow or the width of the
+              // window — it is the pull itself that costs — so one patch is
+              // half the price of two crops.
+              const probe = document.createElement("canvas");
+              probe.width = 64;
+              probe.height = 8;
+              const ink = probe.getContext("2d", { willReadFrequently: true });
+              type Patch = { left: number; right: number; top: number; bottom: number };
+
+              // The patch of film under a rectangle, in the film's own pixels.
+              // The blob is same-origin, so the canvas stays readable.
+              const shoot = (patch: Patch, stage: DOMRect) => {
                 // The poster is the film's own first frame, and it is there
                 // before the clip is: at the top of the page, where the words
                 // open on dark wood, it is the only thing to read.
@@ -359,32 +365,72 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 const scale = Math.max(stage.width / shown.w, stage.height / shown.h);
                 const offX = stage.left + (stage.width - shown.w * scale) / 2;
                 const offY = stage.top + (stage.height - shown.h * scale) / 2;
-                const sx = Math.max((box.left - offX) / scale, 0);
-                const sy = Math.max((box.top - offY) / scale, 0);
-                const sw = Math.min(box.width / scale, shown.w - sx);
-                const sh = Math.min(box.height / scale, shown.h - sy);
+                const sw = (patch.right - patch.left) / scale;
+                const sh = (patch.bottom - patch.top) / scale;
                 if (sw < 1 || sh < 1) return null;
                 try {
-                  ink.drawImage(shown.src, sx, sy, sw, sh, 0, 0, probe.width, probe.height);
-                  const { data } = ink.getImageData(0, 0, probe.width, probe.height);
-                  let dark = 0;
-                  for (let i = 0; i < data.length; i += 4) {
-                    const y = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                    if (y < CROSSOVER) dark += 1;
-                  }
-                  return dark / (data.length / 4);
+                  ink.drawImage(
+                    shown.src,
+                    (patch.left - offX) / scale,
+                    (patch.top - offY) / scale,
+                    sw,
+                    sh,
+                    0,
+                    0,
+                    probe.width,
+                    probe.height,
+                  );
+                  return ink.getImageData(0, 0, probe.width, probe.height).data;
                 } catch {
                   return null;
                 }
+              };
+
+              // How much of one box's share of that patch is darker than the
+              // crossover. What is counted is the SHARE, not the average, and
+              // the gap between the two thresholds above is what keeps a box
+              // sitting near the line from flickering.
+              const darkShare = (data: Uint8ClampedArray, patch: Patch, box: DOMRect) => {
+                const across = patch.right - patch.left;
+                const down = patch.bottom - patch.top;
+                if (across < 1 || down < 1) return null;
+                const col = (x: number) => ((x - patch.left) / across) * probe.width;
+                const row = (y: number) => ((y - patch.top) / down) * probe.height;
+                const x0 = Math.max(Math.floor(col(box.left)), 0);
+                const x1 = Math.min(Math.ceil(col(box.right)), probe.width);
+                const y0 = Math.max(Math.floor(row(box.top)), 0);
+                const y1 = Math.min(Math.ceil(row(box.bottom)), probe.height);
+                if (x1 <= x0 || y1 <= y0) return null;
+                let dark = 0;
+                let seen = 0;
+                for (let y = y0; y < y1; y += 1) {
+                  for (let x = x0; x < x1; x += 1) {
+                    const i = (y * probe.width + x) * 4;
+                    const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                    if (lum < CROSSOVER) dark += 1;
+                    seen += 1;
+                  }
+                }
+                return dark / seen;
               };
 
               const readFilm = () => {
                 if (!film || !wordsEl || !markEl) return;
                 const stage = film.getBoundingClientRect();
                 if (stage.height < 1) return;
-                const words = groundUnder(wordsEl.getBoundingClientRect(), stage);
+                const w = wordsEl.getBoundingClientRect();
+                const m = markEl.getBoundingClientRect();
+                const patch: Patch = {
+                  left: Math.max(Math.min(w.left, m.left), stage.left),
+                  right: Math.min(Math.max(w.right, m.right), stage.right),
+                  top: Math.max(Math.min(w.top, m.top), stage.top),
+                  bottom: Math.min(Math.max(w.bottom, m.bottom), stage.bottom),
+                };
+                const data = shoot(patch, stage);
+                if (!data) return;
+                const words = darkShare(data, patch, w);
                 if (words !== null) setWords(inked(wordsInk, words));
-                const mark = groundUnder(markEl.getBoundingClientRect(), stage);
+                const mark = darkShare(data, patch, m);
                 if (mark !== null) setMark(inked(markInk, mark));
               };
               // A print holds for at least as long as it takes to fade in.
@@ -476,11 +522,17 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 }
               };
 
+              const RATE = 100;
+              let readAt = 0;
               let settle = 0;
-              const watchFilm = () => {
+              const read = () => {
+                readAt = performance.now();
                 readFilm();
+              };
+              const watchFilm = () => {
+                if (performance.now() - readAt >= RATE) read();
                 window.clearTimeout(settle);
-                settle = window.setTimeout(readFilm, 220);
+                settle = window.setTimeout(read, 220);
               };
               const unwatchFilm = () => {
                 window.clearTimeout(settle);
