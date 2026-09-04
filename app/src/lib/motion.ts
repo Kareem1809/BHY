@@ -295,15 +295,23 @@ export function useSiteMotion(deps: readonly unknown[]) {
               // on, and print themselves accordingly — a 24x6 canvas takes the
               // patch of video under them and counts how much of it is dark.
               //
-              // ONLY WHEN EVERYTHING HAS STOPPED. Reading pixels back from a
-              // video texture stalls the pipeline: sampling ten times a second
-              // cost every single frame of a full read of the page (237 of 237
-              // over 24ms, a p99 of 35). Debounced behind the scroll and behind
-              // the playhead's own seeks, it costs nothing while anything is
-              // moving, and lands on the frame the reader actually stopped on.
-              // Measuring the FILE instead would have been cheaper and wrong:
-              // object-fit: cover crops the sides, so the dark corner the file
-              // ends on is off screen at this width.
+              // Read on every paint, while the strip is over the film, and
+              // once more after the playhead settles — it keeps gliding for
+              // about a second after the scrolling stops.
+              //
+              // This was debounced at first, on the belief that a readback off
+              // a video texture costs a frame. It does not. Measured properly —
+              // same page, film primed, three runs each — reading every paint
+              // and reading nothing at all both drop 28-29 frames of 389 on a
+              // scrub through the hero: that cost is the film's own seeking,
+              // and it is there either way. The debounce only ever bought a
+              // lockup that changed colour after you stopped moving, which is
+              // what Kareem saw: «بدي يتغير لونو وانا اتحرك».
+              //
+              // Measuring the FILE instead would be cheaper still and wrong:
+              // object-fit: cover crops the sides by an amount that depends on
+              // the window, so the part of the film under the mark at 1440px is
+              // not the part under it at 390.
               //
               // 127 is where the two prints are equally legible: ink is
               // #3E2E23 (L 0.029), paper is #F5EFE6 (L 0.85), and the contrast
@@ -379,13 +387,28 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 const mark = groundUnder(markEl.getBoundingClientRect(), stage);
                 if (mark !== null) setMark(inked(markInk, mark));
               };
+              // A print holds for at least as long as it takes to fade in.
+              // Reading every paint found the places where the ground sits on
+              // the line and the film keeps crossing it — ten changes inside
+              // 120px of scroll, which is not a lockup adapting, it is one
+              // flickering. The hysteresis above answers a ground that wavers;
+              // this answers a ground that is genuinely half and half.
+              const HOLD = 450;
+              let markAt = 0;
+              let wordsAt = 0;
               const setMark = (on: boolean) => {
                 if (on === markInk) return;
+                const now = performance.now();
+                if (now - markAt < HOLD) return;
+                markAt = now;
                 markInk = on;
                 nav.style.setProperty("--bhy-ink-mark", on ? "1" : "0");
               };
               const setWords = (on: boolean) => {
                 if (on === wordsInk) return;
+                const now = performance.now();
+                if (now - wordsAt < HOLD) return;
+                wordsAt = now;
                 wordsInk = on;
                 nav.style.setProperty("--bhy-ink-words", on ? "1" : "0");
               };
@@ -453,28 +476,16 @@ export function useSiteMotion(deps: readonly unknown[]) {
                 }
               };
 
-              let pending = 0;
-              let onFilmNow = false;
-              const scheduleRead = () => {
-                window.clearTimeout(pending);
-                pending = window.setTimeout(readFilm, 180);
-              };
+              let settle = 0;
               const watchFilm = () => {
-                onFilmNow = true;
-                scheduleRead();
+                readFilm();
+                window.clearTimeout(settle);
+                settle = window.setTimeout(readFilm, 220);
               };
               const unwatchFilm = () => {
-                onFilmNow = false;
-                window.clearTimeout(pending);
-                pending = 0;
+                window.clearTimeout(settle);
+                settle = 0;
               };
-              // The playhead keeps gliding for about a second after the scroll
-              // stops, so the last seek — not the last scroll — is the moment
-              // the picture finally holds still.
-              const onSeeked = () => {
-                if (onFilmNow) scheduleRead();
-              };
-              film?.addEventListener("seeked", onSeeked);
 
               let lastScroll = 0;
               measureBands();
@@ -497,7 +508,6 @@ export function useSiteMotion(deps: readonly unknown[]) {
               navCleanup = () => {
                 watchStrip.disconnect();
                 unwatchFilm();
-                film?.removeEventListener("seeked", onSeeked);
                 ScrollTrigger.removeEventListener("refresh", remeasure);
               };
               ScrollTrigger.create({
