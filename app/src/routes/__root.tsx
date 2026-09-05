@@ -64,23 +64,6 @@ function buildHead() {
     ],
     scripts: [
       {
-        // A black sheet over the whole site. The site underneath is untouched
-        // and still running — it is simply not shown. Black is the DEFAULT in
-        // the stylesheet and only this line lifts it, so there is never a
-        // flash of the real page before the sheet lands.
-        //   basmahaj.com/?open   the real site, remembered on this browser
-        //   basmahaj.com/?dark   the sheet back
-        children:
-          "!function(){try{var h=document.documentElement,q=location.search+location.hash;" +
-          "if(/[?&#]open(=|&|$)/.test(q))localStorage.setItem('bhy-open','1');" +
-          "if(/[?&#]dark(=|&|$)/.test(q))localStorage.removeItem('bhy-open');" +
-          "if(localStorage.getItem('bhy-open')==='1'){h.classList.add('bhy-open');return}" +
-          // A phone paints its own bar in theme-color, and the paper this page
-          // asks for would sit above a black screen looking very much alive.
-          "var t=function(){var m=document.querySelector('meta[name=theme-color]');if(m)m.content='#000'};" +
-          "t();addEventListener('DOMContentLoaded',t)}catch(e){}}()",
-      },
-      {
         // Every deploy gives the stylesheet a new name. A browser holding an
         // older copy of this page asks for the old name, is told the file is
         // gone, and renders the site as raw HTML — no styling at all, and
@@ -180,8 +163,6 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body className="bhy-body">
         {children}
-        {/* Nothing is removed from the page; it is covered. */}
-        <div id="bhy-blackout" aria-hidden="true" />
         <Scripts />
       </body>
     </html>
