@@ -17,7 +17,7 @@
 | صور الأقسام (about, portfolio, process…) | `app/public/assets/*.webp` — بتتولّد من الأصل بـ `python3 tools/images.py` (بدّه Pillow). كل صورة إلها نسخة كاملة + نسخة تلفون `-sm`. |
 | شكل قسم معيّن (ترتيب، عناصر) | `app/src/components/site/<القسم>.tsx` (hero, about, portfolio, services, process, contact, footer, nav…) |
 | الألوان والخطوط والحركة | `app/styles.css` |
-| فيلم الهيرو اللي بيمشي مع السكرول | `app/public/assets/hero-scrub-hd.mp4` — **لا تلمسه** (وصفة محسوبة بدقة؛ شوف `docs/NEXT.md`) |
+| فيلم الهيرو اللي بيمشي مع السكرول | `app/public/assets/hero-scrub-hd.mp4` و`hero-scrub-sm.mp4` — **لا تلمسهم** (وصفة محسوبة بدقة؛ شوف `docs/NEXT.md`). من 21/10: الصغير بينزل أول وبيمشي فوراً، والكبير بيتبدّل فيه بالخلفية بلحظة هادية (`app/src/lib/motion.ts`). |
 | كاش وتوجيه Cloudflare | `app/public/_headers` (سنة كاش للـassets، صفر للصفحة) |
 | فورم التواصل | الشكل بـ`app/src/components/site/contact.tsx`؛ الإرسال بـ`app/src/lib/api/contact.email.ts` (FormSubmit، عنوان مفعّل على الدومين) — **لا تعيد التفعيل ولا تغيّر العنوان** |
 

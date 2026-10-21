@@ -89,18 +89,23 @@ export function useSiteMotion(deps: readonly unknown[]) {
           // the clip fully into memory, then each tick glide the playhead a
           // fifth of the way toward where the scroll points. Until the blob
           // lands the poster holds the opening frame, and playback joins
-          // wherever the reader already is: one seek, no catch-up journey,
-          // no source swapping.
+          // wherever the reader already is: one seek, no catch-up journey.
+          // The small clip comes first and the HD one replaces it only at a
+          // quiet moment (see trySwap).
           const film = document.querySelector<HTMLVideoElement>("[data-hero-film]");
           if (hero && film) {
             const density = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
             const big = density >= 2000;
-            const clipUrl = (big ? film.dataset.srcHd : film.dataset.srcSm) ?? "";
+            const srcSm = film.dataset.srcSm ?? "";
+            const srcHd = film.dataset.srcHd ?? "";
 
             let filmLength = 0;
             let currentFrac = 0;
             let targetFrac = 0;
             let blobUrl = "";
+            let gestured = false;
+            let filmActive = true;
+            let pendingHd: Blob | null = null;
 
             // The film stays invisible until the reader's first gesture; the
             // poster underneath is the identical frame. The decoder warm-up
@@ -128,6 +133,7 @@ export function useSiteMotion(deps: readonly unknown[]) {
             };
             const gestureOpts = { once: true, passive: true } as const;
             const onFirstGesture = () => {
+              gestured = true;
               window.removeEventListener("touchstart", onFirstGesture);
               window.removeEventListener("wheel", onFirstGesture);
               window.removeEventListener("pointerdown", onFirstGesture);
@@ -137,29 +143,64 @@ export function useSiteMotion(deps: readonly unknown[]) {
             window.addEventListener("wheel", onFirstGesture, gestureOpts);
             window.addEventListener("pointerdown", onFirstGesture, gestureOpts);
 
-            fetch(clipUrl)
-              .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+            // Hand the element a clip. Once its length is known the playhead
+            // joins wherever the scroll already points; after a gesture the
+            // warm-up runs again on the new source, hidden, and the film
+            // shows on `seeked` — so a swap never paints a wrong frame.
+            const attach = (blob: Blob) => {
+              if (blobUrl) URL.revokeObjectURL(blobUrl);
+              blobUrl = URL.createObjectURL(blob);
+              filmLength = 0;
+              if (gestured) film.style.opacity = "0";
+              film.addEventListener(
+                "loadedmetadata",
+                () => {
+                  filmLength = film.duration;
+                  currentFrac = targetFrac;
+                  film.currentTime = currentFrac * filmLength;
+                  if (gestured) prime();
+                },
+                { once: true },
+              );
+              film.src = blobUrl;
+              film.load();
+            };
+
+            // Small clip first, so the film moves after about a second
+            // instead of after the whole 7.6 MB (Kareem, 21/10: on a far or
+            // cold Cloudflare edge that took up to twenty seconds, and the
+            // poster just sat there). On a big screen the HD clip follows
+            // and takes over at a quiet moment: at the very top, where the
+            // poster is the same frame, or while the hero is off screen —
+            // never mid-scrub, where the reload would flash the opening frame.
+            const grab = (url: string) =>
+              fetch(url).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))));
+            const trySwap = () => {
+              if (!pendingHd) return;
+              if (currentFrac > 0.01 && filmActive) return;
+              const hd = pendingHd;
+              pendingHd = null;
+              attach(hd);
+            };
+            grab(srcSm)
               .then((blob) => {
-                blobUrl = URL.createObjectURL(blob);
-                film.addEventListener(
-                  "loadedmetadata",
-                  () => {
-                    filmLength = film.duration;
-                    currentFrac = targetFrac;
-                    film.currentTime = currentFrac * filmLength;
-                  },
-                  { once: true },
-                );
-                film.src = blobUrl;
-                film.load();
+                attach(blob);
+                if (!big) return;
+                return grab(srcHd).then((hd) => {
+                  pendingHd = hd;
+                  trySwap();
+                });
               })
-              .catch(() => {});
+              .catch(() => {
+                if (big && !filmLength) grab(srcHd).then(attach).catch(() => {});
+              });
 
             // Glide toward the target; write currentTime only past a small
             // epsilon and never while a seek is in flight, because piled-up
             // seeks are what reads as stutter.
             const epsilon = big ? 0.008 : 0.02;
             const chase = () => {
+              trySwap();
               if (!filmLength || film.seeking) return;
               currentFrac += (targetFrac - currentFrac) * 0.2;
               const t = Math.min(Math.max(currentFrac, 0), 0.999) * filmLength;
@@ -192,11 +233,13 @@ export function useSiteMotion(deps: readonly unknown[]) {
               start: "top bottom",
               end: "bottom top",
               onToggle: (self) => {
+                filmActive = self.isActive;
                 if (self.isActive) {
                   startChase();
                   if (filmStage) filmStage.style.visibility = "";
                 } else {
                   stopChase();
+                  trySwap();
                   // takes the video out of the paint path entirely once the
                   // reader is past it, instead of leaving a live decoder
                   // sitting above every section below
