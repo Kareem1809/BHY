@@ -49,6 +49,7 @@
 - `npx wrangler` بيطلب تسجيل دخول → `npx wrangler login` من جديد (الجلسة بتخلص أحياناً).
 - `vite build` فشل بعد `git pull` → `cd app && npm ci` (حزم تغيّرت).
 - الموقع ما تغيّر بعد النشر → انتظر دقيقة، افتح بـ`Ctrl+Shift+R`؛ الصفحة نفسها بلا كاش بس المتصفح أحياناً بيحتفظ.
+- الفيلم ما بيمشي والهيرو شاشة وحدة ثابتة → الجهاز نفسه مفعّل فيه **Reduce Motion** (ماك: System Settings ← Accessibility ← Display). الموقع بيوقّف الفيلم قصداً بهالحالة؛ مش عطل بالكود.
 - بدّك ترجّع نسخة قديمة → Cloudflare Dashboard → Pages → basmahaj → Deployments → Rollback (أو `git revert` ونشر من جديد).
 
 *كُتب 2026-10-21 على الماك. السكربت الموحّد: `tools/publish.mjs` (و`tools/publish.sh` بيستدعيه).*
