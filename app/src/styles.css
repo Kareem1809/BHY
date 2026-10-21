@@ -837,6 +837,15 @@ button.bhy-lang:focus-visible {
   .bhy-progress {
     display: none;
   }
+  /* With motion reduced the film never loads and nothing scrubs (motion.ts
+     takes its short path), yet the hero kept its 260svh scrub track: a
+     sticky poster that sat frozen for a screen and a half of scrolling,
+     which Kareem — whose Mac has had Reduce Motion on since the 07/10 heat
+     fix — read as the site hanging. No film, no track: one screen, move on.
+     Unlayered on purpose, so it beats the h-[260svh] utility. */
+  [data-hero] {
+    height: 100svh;
+  }
 }
 
 /* ================= phone menu ================= */
