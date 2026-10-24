@@ -281,18 +281,6 @@ html {
 .bhy-nav-cut .bhy-nav-row {
   color: var(--bhy-ink);
 }
-/* Either half of the ink print can be taken away on its own, which is what the
-   film needs: the words and the mark stand on different parts of the picture.
-   Everywhere else both vars are 1 and the clip above is the only thing deciding
-   anything. The fade is what stops a change of print reading as a flicker. */
-.bhy-nav-cut .bhy-logo-link {
-  opacity: var(--bhy-ink-mark, 1);
-  transition: opacity 0.35s ease;
-}
-.bhy-nav-cut .bhy-nav-controls {
-  opacity: var(--bhy-ink-words, 1);
-  transition: opacity 0.35s ease;
-}
 .bhy-nav-cut .bhy-nav-row > * {
   pointer-events: none;
 }

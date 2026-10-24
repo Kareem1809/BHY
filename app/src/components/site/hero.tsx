@@ -4,7 +4,7 @@ import { Arrow } from "./arrow";
 
 export function Hero({ t }: { t: SiteStrings }) {
   return (
-    <section data-hero data-band="light" data-film id="top" className="relative h-[260svh] bg-[#2A1E16]">
+    <section data-hero data-band="dark" data-film id="top" className="relative h-[260svh] bg-[#2A1E16]">
       {/* The section owns its full height and the stage sticks inside it:
           plain CSS sticky, no pinning and no fixed positioning, so nothing is
           ever laid over the section that follows. */}
@@ -40,6 +40,19 @@ export function Hero({ t }: { t: SiteStrings }) {
           data-hero-veil
           aria-hidden="true"
           className="absolute inset-0 bg-gradient-to-t from-[#190f09]/85 via-[#2A1E16]/40 to-[#2A1E16]/25"
+        />
+        {/* The masthead's own ground. The veil above is built for the copy at
+            the bottom and leaves the top of the frame nearly bare, so the
+            lockup used to stand on whatever the film happened to be showing —
+            a lit ceiling for most of the scrub, which all but erased it. This
+            strip puts a known dark under it instead, deep enough at the very
+            top to carry the ivory print and gone by the time the display line
+            starts. It is why the section reads as a dark band now, and why
+            nothing has to measure the picture any more. */}
+        <div
+          data-hero-masthead-scrim
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-[clamp(9rem,min(26vw,44vh),30rem)] bg-gradient-to-b from-[#140c06]/85 via-[#140c06]/45 to-transparent"
         />
         <div
           data-hero-copy
